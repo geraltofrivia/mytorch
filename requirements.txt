@@ -1,3 +1,4 @@
-numpy==1.15.3
-tqdm==4.28.1
 torch==0.4.1
+tqdm==4.28.1
+validators==0.12.2
+numpy==1.15.3
