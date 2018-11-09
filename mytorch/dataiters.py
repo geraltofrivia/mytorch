@@ -73,7 +73,20 @@ class SortishSampler:
         self.ptr = 0
 
     @staticmethod
-    def _reshuffle_(x:list, y:list)->(list, list):
+    def _reshuffle_(x: list, y: list)->(list, list):
+        """
+            Shuffles both, things inside a chunk (batch) and batches.
+        :param x: list of np arr
+        :param y: list of np arr
+        :return: (list, list)
+        """
+        for i in range(len(x)):
+
+            # Shuffle these chunks
+            chunk_idx = np.random.permutation(len(x[i]))
+            x[i] = x[i][chunk_idx]
+            y[i] = y[i][chunk_idx]
+
         shuffle_idx = np.random.permutation(len(x))
         return [x[i] for i in shuffle_idx], [y[i] for i in shuffle_idx]
 
