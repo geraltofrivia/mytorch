@@ -12,7 +12,7 @@ class SimplestSampler:
     :return:
     """
 
-    def __init__(self, data, bs: int=64):
+    def __init__(self, data, bs: int = 64):
 
         try:
             assert len(data["x"]) == len(data["y"])
@@ -53,10 +53,14 @@ class SortishSampler:
         This needs to be re-sorted every iteration.
             Hence the data is duplicated internally.
             Call reset at epoch end to resort it.
+
+            Or you could init a new instance of this :peace:
     """
 
-    def __init__(self, _inputs, _labels, _batchsize:int, _seqlen:int=None, _padidx=0):
+    def __init__(self, data, _batchsize: int, _seqlen: int = None, _padidx=0):
         """ @TODO: snip everything with seqlen """
+        _inputs, _labels = data['x'], data['y']
+
         try:
             assert len(_inputs) == len(_labels)
         except AssertionError:
@@ -73,7 +77,7 @@ class SortishSampler:
         self.ptr = 0
 
     @staticmethod
-    def _reshuffle_(x: list, y: list)->(list, list):
+    def _reshuffle_(x: list, y: list) -> (list, list):
         """
             Shuffles both, things inside a chunk (batch) and batches.
         :param x: list of np arr
@@ -81,7 +85,6 @@ class SortishSampler:
         :return: (list, list)
         """
         for i in range(len(x)):
-
             # Shuffle these chunks
             chunk_idx = np.random.permutation(len(x[i]))
             x[i] = x[i][chunk_idx]
