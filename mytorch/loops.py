@@ -9,17 +9,12 @@
 
 """
 
-import numpy as np
 from tqdm import tqdm
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from typing import Callable
 
 # Local imports
-import dataiters
-import lriters
-from utils.goodies import *
+from mytorch import dataiters
+from mytorch.utils.goodies import *
 
 
 def simplest_loop(epochs: int,
@@ -27,10 +22,10 @@ def simplest_loop(epochs: int,
                   device: torch.device,
                   opt: torch.optim,
                   loss_fn: torch.nn,
-                  train_fn: function,
-                  predict_fn: function,
-                  data_fn: classmethod = dataiters.SimplestDataIter,
-                  eval_fn: function = None) -> (list, list, list):
+                  train_fn: Callable,
+                  predict_fn: Callable,
+                  data_fn: classmethod = dataiters.SimplestSampler,
+                  eval_fn: Callable = None) -> (list, list, list):
     """
         A fn which can be used to train a language model.
 
@@ -118,17 +113,17 @@ def generic_loop(epochs: int,
                  opt: torch.optim,
                  loss_fn: torch.nn,
                  model: torch.nn.Module,
-                 train_fn: function,
-                 predict_fn: function,
-                 epoch_start_hook: function = None,
-                 epoch_end_hook: function = None,
-                 batch_start_hook: function = None,
-                 batch_end_hook: function = None,
+                 train_fn: Callable,
+                 predict_fn: Callable,
+                 epoch_start_hook: Callable = None,
+                 epoch_end_hook: Callable = None,
+                 batch_start_hook: Callable = None,
+                 batch_end_hook: Callable = None,
                  weight_decay: float = 0.0,
                  clip_grads_at: float = -1.0,
                  lr_schedule=None,
-                 data_fn: classmethod = dataiters.SimplestDataIter,
-                 eval_fn: function = None) -> (list, list, list):
+                 data_fn: classmethod = dataiters.SimplestSampler,
+                 eval_fn: Callable = None) -> (list, list, list):
     """
 
         A generic training loop, which based on diff hook fns (defined below), should handle anything given to it.
@@ -218,7 +213,7 @@ def generic_loop(epochs: int,
 
                 y_pred = predict_fn(_x)
 
-                per_epoch_vl_acc.append(eval(y_pred, _y).item())
+                per_epoch_vl_acc.append(eval_fn(y_pred, _y).item())
 
         # Bookkeep
         train_acc.append(np.mean(per_epoch_tr_acc))

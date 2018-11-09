@@ -6,8 +6,7 @@
 
     All lr iterators must have a coherent length.
 """
-import torch
-from utils.goodies import *
+from mytorch.utils.goodies import *
 
 
 class ConstantLR:
