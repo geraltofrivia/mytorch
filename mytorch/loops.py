@@ -90,7 +90,7 @@ def simplest_loop(epochs: int,
 
                 y_pred = predict_fn(_x)
 
-                per_epoch_vl_acc.append(eval(y_pred, _y).item())
+                per_epoch_vl_acc.append(eval_fn(y_pred, _y).item())
 
         # Bookkeep
         train_acc.append(np.mean(per_epoch_tr_acc))
@@ -178,7 +178,7 @@ def generic_loop(epochs: int,
 
             for x, y in tqdm(trn_dl):
 
-                batch_start_hook()
+                if batch_start_hook: batch_start_hook()
                 opt.zero_grad()
 
                 if lr_schedule: lrs.append(update_lr(opt, lr_schedule.get()))
@@ -199,7 +199,7 @@ def generic_loop(epochs: int,
                         param.data = param.data.add(-weight_decay * group['lr'], param.data)
 
                 opt.step()
-                batch_end_hook()
+                if batch_end_hook: batch_end_hook()
 
             if epoch_end_hook: epoch_end_hook()
 
