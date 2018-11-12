@@ -68,7 +68,7 @@ class SortishSampler:
 
         self.bs = _batchsize
         self.padidx = _padidx
-        self.x, self.y = self._reshuffle_(self._sort_(_inputs, _labels))
+        self.x, self.y = self._reshuffle_(**self._sort_(_inputs, _labels))
 
         self.ptr = 0
 
@@ -121,7 +121,7 @@ class SortishSampler:
         # Finally, shuffle final_x,y
         # final_idx = np.random.permutation(len(final_x))
         # return [final_x[i] for i in final_idx], [final_y[i] for i in final_idx]
-        return final_x, final_y
+        return {'x': final_x, 'y': final_y}
 
     def __iter__(self):
         return self
