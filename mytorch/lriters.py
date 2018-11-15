@@ -10,9 +10,9 @@ from mytorch.utils.goodies import *
 
 
 class ConstantLR:
-    def __init__(self, highest_lr: float, length: int):
+    def __init__(self, highest_lr: float, iterations: int):
         self.lr = highest_lr
-        self.len = length
+        self.len = iterations
 
     def __iter__(self):
         return self
