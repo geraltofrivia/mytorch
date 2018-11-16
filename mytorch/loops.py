@@ -72,7 +72,8 @@ def simplest_loop(epochs: int,
                 _x = torch.tensor(x, dtype=torch.long, device=device)
                 _y = torch.tensor(y, dtype=torch.long, device=device)
 
-                loss, y_pred = train_fn(_x, _y, loss_fn)
+                y_pred = train_fn(_x)
+                loss = loss_fn(y_pred, y)
 
                 per_epoch_tr_acc.append(eval_fn(y_pred=y_pred, y_true=_y).item())
                 per_epoch_loss.append(loss.item())
@@ -128,8 +129,8 @@ def generic_loop(epochs: int,
 
         A generic training loop, which based on diff hook fns (defined below), should handle anything given to it.
 
-        The model doesn't need to be an nn.Module,
-            but have an eval (optional), a train and a predict function.
+        The model need not be an nn.Module,
+             but should have correctly wired forward and a predict function.
 
         Data should be a dict like so:
             {"train":{"x":np.arr, "y":np.arr}, "val":{"x":np.arr, "y":np.arr} }
@@ -186,7 +187,8 @@ def generic_loop(epochs: int,
                 _x = torch.tensor(x, dtype=torch.long, device=device)
                 _y = torch.tensor(y, dtype=torch.long, device=device)
 
-                loss, y_pred = train_fn(_x, _y, loss_fn)
+                y_pred = train_fn(_x)
+                loss = loss_fn(y_pred, y)
 
                 per_epoch_tr_acc.append(eval_fn(y_pred=y_pred, y_true=_y).item())
                 per_epoch_loss.append(loss.item())
