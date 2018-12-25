@@ -73,7 +73,7 @@ def simplest_loop(epochs: int,
                 _y = torch.tensor(y, dtype=torch.long, device=device)
 
                 y_pred = train_fn(_x)
-                loss = loss_fn(y_pred, y)
+                loss = loss_fn(y_pred, _y)
 
                 per_epoch_tr_acc.append(eval_fn(y_pred=y_pred, y_true=_y).item())
                 per_epoch_loss.append(loss.item())
@@ -188,7 +188,7 @@ def generic_loop(epochs: int,
                 _y = torch.tensor(y, dtype=torch.long, device=device)
 
                 y_pred = train_fn(_x)
-                loss = loss_fn(y_pred, y)
+                loss = loss_fn(y_pred, _y)
 
                 per_epoch_tr_acc.append(eval_fn(y_pred=y_pred, y_true=_y).item())
                 per_epoch_loss.append(loss.item())

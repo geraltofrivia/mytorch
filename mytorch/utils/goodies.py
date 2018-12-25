@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import torch
+from torch.autograd import Function
 
 
 class CustomError(Exception): pass
@@ -9,6 +10,21 @@ class BadParameters(Exception):
     def __init___(self, dErrorArguments):
         Exception.__init__(self, "Unexpected value of parameter {0}".format(dErrorArguments))
         self.dErrorArguments = dErrorArguments
+
+
+class GradReverse(Function):
+    """
+        Torch function used to invert the sign of gradients (to be used for argmax instead of argmin)
+        Usage:
+            x = GradReverse.apply(x) where x is a tensor with grads.
+    """
+    @staticmethod
+    def forward(ctx, x):
+        return x.view_as(x)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output.neg()
 
 
 def pad_sequence(matrix_seq, max_length, padidx=0):
