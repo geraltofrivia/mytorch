@@ -156,14 +156,20 @@ class LearningRateScheduler:
         ```
     """
 
-    def __init__(self, optimizer: torch.optim, lr_args: dict, lr_iterator=ConstantLR, org_lrs:list = None):
+    def __init__(self, lr_args: dict, lr_iterator=ConstantLR, org_lrs:list = None, optimizer: torch.optim = None):
         """
         :param optimizer: torch.optim thing. Should have appropriate param groups for effective LR scheduling per layer.
         :param lr_args: a bunch of args (dict) intended for the given lr_iterator
         :param lr_iterator: a class reference of the intended lr schedule.
         """
-        self.opt = optimizer
-        self.org_lrs = [group['lr'] for group in self.opt.param_groups] if not org_lrs else org_lrs
+
+        if optimizer is None and org_lrs is None:
+            raise CustomError("No information specified to get highest lr.")
+        elif optimizer is None:
+            self.org_lrs = org_lrs
+        else:
+            self.opt = optimizer
+            self.org_lrs = [group['lr'] for group in self.opt.param_groups]
 
         self.lr_iters = [lr_iterator(highest_lr=lr, **lr_args) for lr in self.org_lrs]
 
