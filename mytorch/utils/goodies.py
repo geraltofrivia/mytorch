@@ -12,6 +12,12 @@ class BadParameters(Exception):
         self.dErrorArguments = dErrorArguments
 
 
+class FancyDict(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(**kwargs)
+        self.__dict__ = self
+
+
 class GradReverse(Function):
     """
         Torch function used to invert the sign of gradients (to be used for argmax instead of argmin)
@@ -86,3 +92,6 @@ class Counter(dict):
 
     def most_common(self, n):
         return [(x, self[x]) for x in sorted(self.keys(), key=lambda w: -self[w])[:n]]
+
+    def sorted(self):
+        return [(x, self[x]) for x in sorted(self.keys(), key=lambda w: -self[w])]
