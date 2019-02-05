@@ -1,6 +1,13 @@
+import os
 import time
-import numpy as np
+import json
 import torch
+import pickle
+import warnings
+import numpy as np
+
+from pathlib import Path
+from collections import namedtuple
 from torch.autograd import Function
 
 
@@ -95,3 +102,71 @@ class Counter(dict):
 
     def sorted(self):
         return [(x, self[x]) for x in sorted(self.keys(), key=lambda w: -self[w])]
+
+
+tosave = namedtuple('ObjectsToSave','fname obj')
+
+def save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None, numpy_stuff: list = None, json_stuff: list = None):
+    """
+        Function you can call which will place your stuff in a subfolder within a dir properly.
+        Eg.1
+            savedir is empty dir
+                -> mkdir 0
+                -> cd 0
+                -> save stuff (torch, pickle, and numpy stuff)
+
+        Eg.2
+            ls savedir -> 0, 1, 2, ... 9, 10, 11
+                -> mkdir 12 && cd 12
+                -> save stuff
+
+        NOTE: all the stuff to save should also have an accompanying filename, and so we use tosave named tuple defined above as
+            tosave = namedtuple('ObjectsToSave','fname obj')
+
+        ** Usage **
+        # say `encoder` is torch module, and `traces` is a python obj (dont care what)
+        savedir = Path('runs')
+        save(
+                savedir,
+                torch_stuff = [tosave(fname='model.torch', obj=encoder)],
+                pickle_stuff = [tosave('traces.pkl', traces)]
+            )
+
+
+    :param savedir: pathlib.Path object of the parent directory
+    :param torch_stuff: list of tosave tuples to be saved with torch.save functions
+    :param pickle_stuff: list of tosave tuples to be saved with pickle.dump
+    :param numpy_stuff: list of tosave tuples to be saved with numpy.save
+    :param json_stuff: list of tosave tuples to be saved with json.dump
+    :return: None
+    """
+
+    assert savedir.is_dir(), f'{savedir} is not a directory!'
+
+    if not torch_stuff and not pickle_stuff and not numpy_stuff:
+        warnings.warn(f"No objects given to save at {savedir}")
+
+    # Check if the dir exits
+    assert savedir.exists(), f'{savedir} does not exist.'
+
+    # List all folders within, and convert them to ints
+    existing = sorted([int(x) for x in os.listdir(savedir)], reverse=True)
+
+    # If dir is empty, new folder name is 0 else 1
+    newdir_num = str(existing[0] + 1) if existing else '0'
+    savedir = savedir / newdir_num
+
+    # Make this dir and write everything in there
+    savedir.mkdir()
+
+    for data in torch_stuff:
+        torch.save(data.obj, savedir / data.fname)
+
+    for data in pickle_stuff:
+        pickle.dump(data.obj, open(savedir / data.fname, 'wb+'))
+
+    for data in numpy_stuff:
+        np.save(savedir / data.fname, data.obj)
+
+    for data in json_stuff:
+        json.dump(data.obj, open(savedir / data.fname, 'w+'))
