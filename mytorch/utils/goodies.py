@@ -4,6 +4,7 @@ import json
 import torch
 import pickle
 import warnings
+import traceback
 import numpy as np
 
 from pathlib import Path
@@ -100,8 +101,18 @@ class Counter(dict):
     def most_common(self, n):
         return [(x, self[x]) for x in sorted(self.keys(), key=lambda w: -self[w])[:n]]
 
-    def sorted(self):
-        return [(x, self[x]) for x in sorted(self.keys(), key=lambda w: -self[w])]
+    def sorted(self, data=None):
+        """
+            If data given, then sort that and return, if not, sort self.
+        :param dict: optional: dict
+        :return:
+        """
+        if not data:
+            data = self
+        return [(x, data[x]) for x in sorted(data.keys(), key=lambda w: -data[w])]
+
+    def cropped_with_freq(self, f):
+        return sorted({tok: freq for tok, freq in self.items() if freq > f})
 
 
 tosave = namedtuple('ObjectsToSave','fname obj')
@@ -153,7 +164,7 @@ def save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
     assert savedir.exists(), f'{savedir} does not exist.'
 
     # List all folders within, and convert them to ints
-    existing = sorted([int(x) for x in os.listdir(savedir)], reverse=True)
+    existing = sorted([int(x) for x in os.listdir(savedir) if x.isdigit()], reverse=True)
 
     if not existing:
         # If no subfolder exists
@@ -169,13 +180,25 @@ def save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
 
     # Commence saving shit!
     for data in torch_stuff:
-        torch.save(data.obj, savedir / data.fname)
+        try:
+            torch.save(data.obj, savedir / data.fname)
+        except:
+            traceback.print_exc()
 
     for data in pickle_stuff:
-        pickle.dump(data.obj, open(savedir / data.fname, 'wb+'))
+        try:
+            pickle.dump(data.obj, open(savedir / data.fname, 'wb+'))
+        except:
+            traceback.print_exc()
 
     for data in numpy_stuff:
-        np.save(savedir / data.fname, data.obj)
+        try:
+            np.save(savedir / data.fname, data.obj)
+        except:
+            traceback.print_exc()
 
     for data in json_stuff:
-        json.dump(data.obj, open(savedir / data.fname, 'w+'))
+        try:
+            json.dump(data.obj, open(savedir / data.fname, 'w+'))
+        except:
+            traceback.print_exc()
