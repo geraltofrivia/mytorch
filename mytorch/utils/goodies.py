@@ -179,25 +179,25 @@ def save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
         savedir = savedir / str(existing[0])
 
     # Commence saving shit!
-    for data in torch_stuff:
+    for data in torch_stuff or ():
         try:
             torch.save(data.obj, savedir / data.fname)
         except:
             traceback.print_exc()
 
-    for data in pickle_stuff:
+    for data in pickle_stuff or ():
         try:
             pickle.dump(data.obj, open(savedir / data.fname, 'wb+'))
         except:
             traceback.print_exc()
 
-    for data in numpy_stuff:
+    for data in numpy_stuff or ():
         try:
             np.save(savedir / data.fname, data.obj)
         except:
             traceback.print_exc()
 
-    for data in json_stuff:
+    for data in json_stuff or ():
         try:
             json.dump(data.obj, open(savedir / data.fname, 'w+'))
         except:
