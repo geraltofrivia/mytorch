@@ -117,32 +117,66 @@ class Counter(dict):
 
 tosave = namedtuple('ObjectsToSave','fname obj')
 
-def save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
+def mt_save_dir(parentdir: Path, _newdir:bool=False):
+    """
+            Function which returns the last filled/or newest unfilled folder in a particular dict.
+            Eg.1
+                parentdir is empty dir
+                    -> mkdir 0
+                    -> cd 0
+                    -> return parentdir/0
+
+            Eg.2
+                ls savedir -> 0, 1, 2, ... 9, 10, 11
+                    -> mkdir 12 && cd 12 (if newdir is True) else 11
+                    -> return parentdir/11 (or 12)
+
+            ** Usage **
+            Get a path using this function,
+
+        :param parentdir: pathlib.Path object of the parent directory
+        :param _newdir: bool flag to save in the last dir or make a new one
+        :return: None
+    """
+    assert parentdir.is_dir(), f'{parentdir} is not a directory!'
+
+    # Check if the dir exits
+    assert parentdir.exists(), f'{parentdir} does not exist.'
+
+    # List all folders within, and convert them to ints
+    existing = sorted([int(x) for x in os.listdir(parentdir) if x.isdigit()], reverse=True)
+
+    if not existing:
+        # If no subfolder exists
+        parentdir = parentdir / '0'
+        parentdir.mkdir()
+    elif _newdir:
+        # If there are subfolders and we want to make a new dir
+        parentdir = parentdir / str(existing[0] + 1)
+        parentdir.mkdir()
+    else:
+        # There are other folders and we dont wanna make a new folder
+        parentdir = parentdir / str(existing[0])
+
+    return parentdir
+
+def mt_save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
          numpy_stuff: list = None, json_stuff: list = None, _newdir:bool=False):
     """
-        Function you can call which will place your stuff in a subfolder within a dir properly.
-        Eg.1
-            savedir is empty dir
-                -> mkdir 0
-                -> cd 0
-                -> save stuff (torch, pickle, and numpy stuff)
 
-        Eg.2
-            ls savedir -> 0, 1, 2, ... 9, 10, 11
-                -> mkdir 12 && cd 12 (if newdir is True) else 11
-                -> save stuff
+        Saves bunch of diff stuff in a particular dict.
 
         NOTE: all the stuff to save should also have an accompanying filename, and so we use tosave named tuple defined above as
             tosave = namedtuple('ObjectsToSave','fname obj')
 
         ** Usage **
         # say `encoder` is torch module, and `traces` is a python obj (dont care what)
-        savedir = Path('runs')
+        parentdir = Path('runs')
+        savedir = save_dir(parentdir, _newdir=True)
         save(
                 savedir,
                 torch_stuff = [tosave(fname='model.torch', obj=encoder)],
-                pickle_stuff = [tosave('traces.pkl', traces)],
-                newdir=False
+                pickle_stuff = [tosave('traces.pkl', traces)]
             )
 
 
@@ -151,32 +185,10 @@ def save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
     :param pickle_stuff: list of tosave tuples to be saved with pickle.dump
     :param numpy_stuff: list of tosave tuples to be saved with numpy.save
     :param json_stuff: list of tosave tuples to be saved with json.dump
-    :param _newdir: bool flag to save in the last dir or make a new one
     :return: None
     """
 
     assert savedir.is_dir(), f'{savedir} is not a directory!'
-
-    if not torch_stuff and not pickle_stuff and not numpy_stuff:
-        warnings.warn(f"No objects given to save at {savedir}")
-
-    # Check if the dir exits
-    assert savedir.exists(), f'{savedir} does not exist.'
-
-    # List all folders within, and convert them to ints
-    existing = sorted([int(x) for x in os.listdir(savedir) if x.isdigit()], reverse=True)
-
-    if not existing:
-        # If no subfolder exists
-        savedir = savedir / '0'
-        savedir.mkdir()
-    elif _newdir:
-        # If there are subfolders and we want to make a new dir
-        savedir = savedir / str(existing[0] + 1)
-        savedir.mkdir()
-    else:
-        # There are other folders and we dont wanna make a new folder
-        savedir = savedir / str(existing[0])
 
     # Commence saving shit!
     for data in torch_stuff or ():
