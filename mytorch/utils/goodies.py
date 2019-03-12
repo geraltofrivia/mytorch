@@ -3,6 +3,7 @@ import time
 import json
 import torch
 import pickle
+import argparse
 import warnings
 import traceback
 import numpy as np
@@ -11,6 +12,7 @@ from pathlib import Path
 from collections import namedtuple
 from torch.autograd import Function
 
+TRACES_FORMAT = ['train_acc', 'train_loss', 'val_acc']
 
 class CustomError(Exception): pass
 class MismatchedDataError(Exception): pass
@@ -117,7 +119,7 @@ class Counter(dict):
 
 tosave = namedtuple('ObjectsToSave','fname obj')
 
-def mt_save_dir(parentdir: Path, _newdir:bool=False):
+def mt_save_dir(parentdir: Path, _newdir: bool = False):
     """
             Function which returns the last filled/or newest unfilled folder in a particular dict.
             Eg.1
@@ -132,7 +134,9 @@ def mt_save_dir(parentdir: Path, _newdir:bool=False):
                     -> return parentdir/11 (or 12)
 
             ** Usage **
-            Get a path using this function,
+            Get a path using this function like so:
+                parentdir = Path('runs')
+                savedir = save_dir(parentdir, _newdir=True)
 
         :param parentdir: pathlib.Path object of the parent directory
         :param _newdir: bool flag to save in the last dir or make a new one
@@ -160,8 +164,8 @@ def mt_save_dir(parentdir: Path, _newdir:bool=False):
 
     return parentdir
 
-def mt_save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
-         numpy_stuff: list = None, json_stuff: list = None, _newdir:bool=False):
+def mt_save(savedir: Path, message: str= None, torch_stuff: list = None, pickle_stuff: list = None,
+            numpy_stuff: list = None, json_stuff: list = None):
     """
 
         Saves bunch of diff stuff in a particular dict.
@@ -181,6 +185,7 @@ def mt_save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
 
 
     :param savedir: pathlib.Path object of the parent directory
+    :param message: a message to be saved in the folder alongwith (as text)
     :param torch_stuff: list of tosave tuples to be saved with torch.save functions
     :param pickle_stuff: list of tosave tuples to be saved with pickle.dump
     :param numpy_stuff: list of tosave tuples to be saved with numpy.save
@@ -191,6 +196,10 @@ def mt_save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
     assert savedir.is_dir(), f'{savedir} is not a directory!'
 
     # Commence saving shit!
+    if message:
+        with open('message.txt','w+') as f:
+            f.write(message)
+
     for data in torch_stuff or ():
         try:
             torch.save(data.obj, savedir / data.fname)
@@ -214,3 +223,18 @@ def mt_save(savedir: Path, torch_stuff: list = None, pickle_stuff: list = None,
             json.dump(data.obj, open(savedir / data.fname, 'w+'))
         except:
             traceback.print_exc()
+
+
+def str2bool(v):
+    """
+        Function (copied from -https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse )
+
+    :param v:
+    :return:
+    """
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')

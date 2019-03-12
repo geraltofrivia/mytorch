@@ -116,6 +116,11 @@ def generic_loop(epochs: int,
                  model: torch.nn.Module,
                  train_fn: Callable,
                  predict_fn: Callable,
+                 save: bool = False,
+                 save_params: dict = None,
+                 save_dir: Path = None,
+                 save_above: float = -np.inf,
+                 epoch_count: int = 0,
                  epoch_start_hook: Callable = None,
                  epoch_end_hook: Callable = None,
                  batch_start_hook: Callable = None,
@@ -124,7 +129,7 @@ def generic_loop(epochs: int,
                  clip_grads_at: float = -1.0,
                  lr_schedule=None,
                  data_fn: classmethod = dataiters.SimplestSampler,
-                 eval_fn: Callable = None) -> (list, list, list):
+                 eval_fn: Callable = None) -> (list, list, list, list):
     """
 
         A generic training loop, which based on diff hook fns (defined below), should handle anything given to it.
@@ -132,10 +137,15 @@ def generic_loop(epochs: int,
         The model need not be an nn.Module,
              but should have correctly wired forward and a predict function.
 
-        Data should be a dict like so:
-            {"train":{"x":np.arr, "y":np.arr}, "val":{"x":np.arr, "y":np.arr} }
+        # Data input
+            Data should be a dict like so:
+                {"train":{"x":np.arr, "y":np.arr}, "val":{"x":np.arr, "y":np.arr} }
 
-        Train_fn must return both loss and y_pred
+            Train_fn must return both loss and y_pred
+
+        # Saving Logic
+            If the flag is enabled, give in the dir and it'll save traces and the model (and the model encoder)
+                everytime training acc exceeds all prev ones.
 
     :param epochs: number of epochs to train for
     :param data: data dict (structure specified above)
@@ -145,6 +155,12 @@ def generic_loop(epochs: int,
     :param model: torch module (for grad clipping)
     :param train_fn: a function which takes x & y, returns loss and y_pred
     :param predict_fn: a fn which takes x and returns y_pred
+    :param save: [OPTIONAL] bool which wants either doesn't save, or saves at best
+    :param save_dir: [OPTIONAL] Path object to which we save stuff (based on save_best)
+    :param save_params: [OPTIONAL] a dict of all the params used while running and training the model.
+    :param save_above: [OPTIONAL] acts as threshold regarading model saving. If the current trn accuracy is less than this, won't.
+    :param epoch_count: an int which is added with #epochs (for better representation of how many epochs have actually passed).
+            You can use this for when you run the loop say 3 times, do something else and run it for another 10.
     :param epoch_start_hook: a fn that can be called @ start of every epoch (returns model, opt)
     :param epoch_end_hook: a fn that can be called @ end of every epoch (returns model, opt)
     :param batch_start_hook: a fn that can be called @ start of every batch (returns model, opt)
@@ -223,13 +239,32 @@ def generic_loop(epochs: int,
         val_acc.append(np.mean(per_epoch_vl_acc))
 
         print("Epoch: %(epo)03d | Loss: %(loss).5f | Tr_c: %(tracc)0.5f | Vl_c: %(vlacc)0.5f | Time: %(time).3f min"
-              % {'epo': e,
+              % {'epo': e + epoch_count,
                  'loss': float(np.mean(per_epoch_loss)),
                  'tracc': float(np.mean(per_epoch_tr_acc)),
                  'vlacc': float(np.mean(per_epoch_vl_acc)),
                  'time': timer.interval / 60.0})
 
-    return train_acc, train_loss, val_acc, lrs
+        # Save block (flag and condition)
+        if save and train_acc[-1] >= save_above:
+            # Update threshold
+            save_above = train_acc[-1]
+
+            # Adding epoch info along with options
+            if save_params:
+                save_params['epoch'] = e
+            else:
+                save_paras = {'epoch': e}
+
+            # Call save function and save
+            mt_save(save_dir,
+                    torch_stuff=[tosave('model.torch', model.state_dict()),
+                                 tosave('model_enc.torch', model.encoder.state_dict())],
+                    pickle_stuff=[
+                        tosave('traces.pkl', [train_acc, val_acc, train_loss, lrs])])
+            print(f"Model saved on Epoch {e} at {save_dir} because of highest training acc so far")
+
+    return train_acc, val_acc, train_loss, lrs
 
 
 # Let's write hooks to mimic phase 2 data prep
