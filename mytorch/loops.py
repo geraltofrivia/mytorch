@@ -239,7 +239,7 @@ def generic_loop(epochs: int,
         val_acc.append(np.mean(per_epoch_vl_acc))
 
         print("Epoch: %(epo)03d | Loss: %(loss).5f | Tr_c: %(tracc)0.5f | Vl_c: %(vlacc)0.5f | Time: %(time).3f min"
-              % {'epo': e + epoch_count,
+              % {'epo': e,
                  'loss': float(np.mean(per_epoch_loss)),
                  'tracc': float(np.mean(per_epoch_tr_acc)),
                  'vlacc': float(np.mean(per_epoch_vl_acc)),
