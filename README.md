@@ -1,4 +1,4 @@
-# mytorch is your torch ::
+# mytorch is your torch :fire:
 A bag of tricks, aux functions to ease my pytorch experience.
 
 Many parts here are inspired/copied from [fast.ai](https://github.com/fastai/fastai).
@@ -12,10 +12,10 @@ I'll be adding proper documentation, examples here, gradually.
 
 1. **Training Loop**
     - Callbacks @ epoch start and end
-    - Weight Decay (see [this blog post](https://www.fast.ai/2018/07/02/adam-weight-decay/)
+    - Weight Decay (see [this blog post](https://www.fast.ai/2018/07/02/adam-weight-decay/) )
     - :scissors: Gradient Clipping
     - :floppy_disk: Model Saving 
-    - :bell: Mobile push notifications @ the end of training :ghost: ( [See Usage](#usage-notification)) )
+    - :bell: Mobile push notifications @ the end of training :ghost: ( [See Usage](#notifications)) )
     
 2. **Sortist Sampling** 
     
@@ -62,7 +62,7 @@ train_acc, valid_acc, train_loss = loops.simplest_loop(epochs=epochs, data=data,
 
 ## Slightly more complex examples
 
-@TODO: They exit! Just need to add examples :sweat_smile:
+@TODO: They exist! Just need to add examples :sweat_smile:
 1. Custom eval
 2. Custom data sampler
 3. Custom learning rate annealing schedules
@@ -83,7 +83,7 @@ But If you'd like this completely unnecessary gimmick, follow along:
     1. in a file, named `./push-techulus-key`, in plaintext at the root dir of this folder. You could just `echo 'your-api-key' >> ./push-techulus-ley`.
     2. through arguments to the training loop (_@TODO: Add link :to relevant line_) as a string
 4. Pass flag to loop, to enable notifications
-5. Done :confetti: You'll be notified when your model's done training.
+5. Done :balloon: You'll be notified when your model's done training.
 
 # Upcomming
 1. :bangbang: Tests

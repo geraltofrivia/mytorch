@@ -80,6 +80,16 @@ def make_opt(model, opt_fn, lr=0.001):
     return opt_fn([{'params': l.parameters(), 'lr': lr} for l in model.layers])
 
 
+def default_eval(y_pred, y_true):
+    """
+        Expects a batch of input
+
+        :param y_pred: tensor of shape (b, nc)
+        :param y_true: tensor of shape (b, 1)
+    """
+    return torch.mean((torch.argmax(y_pred, dim=1) == y_true).float())
+
+
 class Timer:
     """ Simple block which can be called as a context, to know the time of a block. """
     def __enter__(self):

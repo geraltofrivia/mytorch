@@ -19,13 +19,13 @@ from mytorch.utils.goodies import *
 
 def simplest_loop(epochs: int,
                   data: dict,
-                  device: torch.device,
                   opt: torch.optim,
                   loss_fn: torch.nn,
                   train_fn: Callable,
                   predict_fn: Callable,
+                  device: torch.device = torch.device('cpu'),
                   data_fn: classmethod = dataiters.SimplestSampler,
-                  eval_fn: Callable = None) -> (list, list, list):
+                  eval_fn: Callable = default_eval) -> (list, list, list):
     """
         A fn which can be used to train a language model.
 
@@ -51,7 +51,7 @@ def simplest_loop(epochs: int,
 
     train_loss = []
     train_acc = []
-    val_acc = []
+    valid_acc = []
     lrs = []
 
     # Epoch level
@@ -96,7 +96,7 @@ def simplest_loop(epochs: int,
         # Bookkeep
         train_acc.append(np.mean(per_epoch_tr_acc))
         train_loss.append(np.mean(per_epoch_loss))
-        val_acc.append(np.mean(per_epoch_vl_acc))
+        valid_acc.append(np.mean(per_epoch_vl_acc))
 
         print("Epoch: %(epo)03d | Loss: %(loss).5f | Tr_c: %(tracc)0.5f | Vl_c: %(vlacc)0.5f | Time: %(time).3f min"
               % {'epo': e,
@@ -105,7 +105,7 @@ def simplest_loop(epochs: int,
                  'vlacc': float(np.mean(per_epoch_vl_acc)),
                  'time': timer.interval / 60.0})
 
-    return train_acc, train_loss, val_acc
+    return train_acc, valid_acc, train_loss
 
 
 def generic_loop(epochs: int,
