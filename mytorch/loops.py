@@ -129,7 +129,9 @@ def generic_loop(epochs: int,
                  clip_grads_at: float = -1.0,
                  lr_schedule=None,
                  data_fn: classmethod = dataiters.SimplestSampler,
-                 eval_fn: Callable = None) -> (list, list, list, list):
+                 eval_fn: Callable = None,
+                 notify: bool = False,
+                 notify_key: str = None) -> (list, list, list, list):
     """
 
         A generic training loop, which based on diff hook fns (defined below), should handle anything given to it.
@@ -159,6 +161,7 @@ def generic_loop(epochs: int,
     :param save_dir: [OPTIONAL] Path object to which we save stuff (based on save_best)
     :param save_params: [OPTIONAL] a dict of all the params used while running and training the model.
     :param save_above: [OPTIONAL] acts as threshold regarading model saving. If the current trn accuracy is less than this, won't.
+    :param save_model_name: [OPTIONAL] which name with which to save the model with. Defaults to 'model.torch'
     :param epoch_count: an int which is added with #epochs (for better representation of how many epochs have actually passed).
             You can use this for when you run the loop say 3 times, do something else and run it for another 10.
     :param epoch_start_hook: a fn that can be called @ start of every epoch (returns model, opt)
@@ -170,6 +173,8 @@ def generic_loop(epochs: int,
     :param lr_schedule: a schedule that is called @ every batch start.
     :param data_fn: a class to which we can pass X and Y, and get an iterator.
     :param eval_fn: (optional) function which when given pred and true, returns acc
+    :param notify: (optional) flag which enables sending notifications to your phones once the loop is done.
+    :param notify_key: (optional) the api key to which the notification is to be sent. You can give it here, or in a file (see README.md)
     :return: traces
     """
 
@@ -177,9 +182,10 @@ def generic_loop(epochs: int,
     train_acc = []
     val_acc = []
     lrs = []
+    saved_info = {}
 
     # Epoch level
-    for e in range(epochs):
+    for e in range(epoch_count, epochs + epoch_count):
 
         per_epoch_loss = []
         per_epoch_tr_acc = []
@@ -258,11 +264,18 @@ def generic_loop(epochs: int,
 
             # Call save function and save
             mt_save(save_dir,
-                    torch_stuff=[tosave('model.torch', model.state_dict()),
-                                 tosave('model_enc.torch', model.encoder.state_dict())],
+                    torch_stuff=None if 'torch_stuff' in save_args.keys() else save_args['torch_stuff'],
                     pickle_stuff=[
                         tosave('traces.pkl', [train_acc, val_acc, train_loss, lrs])])
             print(f"Model saved on Epoch {e} at {save_dir} because of highest training acc so far")
+
+            # Log the saved thing
+            saved_info['epoch'] = e
+            saved_info['accuracy'] = train_acc[-1]
+            saved_info['directory'] = save_dir
+
+    if notify:
+        send_notification(data=saved_info, key=notify_key)
 
     return train_acc, val_acc, train_loss, lrs
 
