@@ -3,6 +3,7 @@ import time
 import json
 import torch
 import pickle
+import requests
 import argparse
 import warnings
 import traceback
@@ -12,10 +13,12 @@ from pathlib import Path
 from collections import namedtuple
 from torch.autograd import Function
 
-TRACES_FORMAT = ['train_acc', 'train_loss', 'val_acc']
+TRACES_FORMAT = {name: i for i, name in enumerate(['train_acc', 'train_loss', 'val_acc'])}
 
 class CustomError(Exception): pass
 class MismatchedDataError(Exception): pass
+class NotifyAPIKeyNotFoundError(Exception): pass
+class NotifyMessageMismatchError(Exception): pass
 class BadParameters(Exception):
     def __init___(self, dErrorArguments):
         Exception.__init__(self, "Unexpected value of parameter {0}".format(dErrorArguments))
@@ -78,6 +81,16 @@ def make_opt(model, opt_fn, lr=0.001):
         Based on model.layers it creates diff param groups in opt.
     """
     return opt_fn([{'params': l.parameters(), 'lr': lr} for l in model.layers])
+
+
+def default_eval(y_pred, y_true):
+    """
+        Expects a batch of input
+
+        :param y_pred: tensor of shape (b, nc)
+        :param y_true: tensor of shape (b, 1)
+    """
+    return torch.mean((torch.argmax(y_pred, dim=1) == y_true).float())
 
 
 class Timer:
@@ -225,7 +238,7 @@ def mt_save(savedir: Path, message: str= None, torch_stuff: list = None, pickle_
             traceback.print_exc()
 
 
-def str2bool(v):
+def str2bool(v)->bool:
     """
         Function (copied from -https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse )
 
@@ -238,3 +251,54 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+def send_notification(data: dict, key: str = None, message_template: str = None, title: str = None) -> None:
+    """
+        Code which can send notification to a phone (using push.techulus.com).
+        It tries to find api key from disk if not given as arg.
+
+        And data is put on a template of message to send it to a phone
+
+    :param data: a dictionary containing (i) epoch count (int); (ii) accuracy (float) and (iii) save directory (str)
+    :param key: a str containing an API key (optional).
+    :param message_template: a str with placeholders to put in data .
+        Eg. 'Model saved at %(directory)s, after %(epoch)d epochs, having %(accuracy)f accuracy'
+    :param title: a str which is the title of the notification
+    :return: None
+    """
+
+    if not key:
+        try:
+            key = open('./push-techulus-key', 'r').read()
+        except FileNotFoundError:
+            raise NotifyAPIKeyNotFoundError("Couldn't find key to send a notification with")
+
+    if not title:
+        title = 'Bring out the champagne, your model is trained!'
+
+    if not message_template:
+        message_template = \
+            'A model trained for %(epoch)d epochs, which achieved a %(accuracy)f percent accuracy, is now stored at %(directory)s'
+
+    # Check if data fits the template
+    try:
+        message = message_template % data
+    except (KeyError, TypeError) as e:
+        raise NotifyMessageMismatchError(f"The data with keys {list(data.keys())} does not fit the message template.")
+
+    url = "https://push.techulus.com/api/v1/notify"
+    payload = json.dumps({"title": title, "body": message})
+
+    headers = {
+        'Content-Type': "application/json",
+        'x-api-key': key,
+    }
+
+    try:
+        response = requests.request("POST", url, data=payload, headers=headers)
+        print("Successfully delivered a notification on your cellphone. Cheers!")
+    except:     # @TODO: Figure out which exceptions to catch
+        traceback.print_exc()
+        warnings.warn("Couldn't deliver notifications. Apologies. Report the traceback as an issue on Github, please?")
+
+
