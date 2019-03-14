@@ -85,7 +85,7 @@ But If you'd like this completely unnecessary gimmick, follow along:
 4. Pass flag to loop, to enable notifications
 5. Done :balloon: You'll be notified when your model's done training.
 
-# Upcomming
+# Upcoming
 1. :bangbang: Tests
 2. :exclamation: Packaging this up to easy set-up post cloning (its a hack right now. Sorry ^.^)
 3. Using FastProgress for progress + live plotting
