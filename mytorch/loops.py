@@ -154,7 +154,9 @@ def generic_loop(epochs: int,
     :param device: torch device to init the tensors with
     :param opt: torch optimizer, with proper param_groups for better lr decay per laye
     :param loss_fn: torch.nn loss fn
-    :param model: torch module (for grad clipping)
+    :param model: torch module needed for
+            i: grad clipping
+            ii: for calling eval() and train() (regarding dropout)
     :param train_fn: a function which takes x & y, returns loss and y_pred
     :param predict_fn: a fn which takes x and returns y_pred
     :param save: [OPTIONAL] bool which wants either doesn't save, or saves at best
@@ -193,6 +195,9 @@ def generic_loop(epochs: int,
         # Train
         with Timer() as timer:
 
+            # Enable dropouts
+            model.train()
+
             # @TODO: Add hook at start of epoch (how to decide what goes in)
             if epoch_start_hook: epoch_start_hook()
 
@@ -229,6 +234,9 @@ def generic_loop(epochs: int,
 
         # Val
         with torch.no_grad():
+
+            # Disable dropouts
+            model.eval()
 
             per_epoch_vl_acc = []
             for x, y in tqdm(val_dl):
