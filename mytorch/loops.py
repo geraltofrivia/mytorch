@@ -120,6 +120,7 @@ def generic_loop(epochs: int,
                  save_params: dict = None,
                  save_dir: Path = None,
                  save_above: float = -np.inf,
+                 save_args: dict = None,
                  epoch_count: int = 0,
                  epoch_start_hook: Callable = None,
                  epoch_end_hook: Callable = None,
@@ -149,19 +150,28 @@ def generic_loop(epochs: int,
             If the flag is enabled, give in the dir and it'll save traces and the model (and the model encoder)
                 everytime training acc exceeds all prev ones.
 
+        ## If you want to save diff parts of the model,
+        Prepare save args like -
+            save_args = {'torch_stuff': [tosave('model.torch', clf.state_dict()), tosave('model_enc.torch', clf.encoder.state_dict())]}
+        and pass it to the model alongwith.
+        If the arg is empty, it defaults to -
+            save_args = {'torch_stuff': [tosave('model.torch', model.state_dict())]}
+
     :param epochs: number of epochs to train for
     :param data: data dict (structure specified above)
     :param device: torch device to init the tensors with
     :param opt: torch optimizer, with proper param_groups for better lr decay per laye
     :param loss_fn: torch.nn loss fn
-    :param model: torch module (for grad clipping)
+    :param model: torch module needed for
+            i: grad clipping
+            ii: for calling eval() and train() (regarding dropout)
     :param train_fn: a function which takes x & y, returns loss and y_pred
     :param predict_fn: a fn which takes x and returns y_pred
     :param save: [OPTIONAL] bool which wants either doesn't save, or saves at best
     :param save_dir: [OPTIONAL] Path object to which we save stuff (based on save_best)
     :param save_params: [OPTIONAL] a dict of all the params used while running and training the model.
     :param save_above: [OPTIONAL] acts as threshold regarading model saving. If the current trn accuracy is less than this, won't.
-    :param save_model_name: [OPTIONAL] which name with which to save the model with. Defaults to 'model.torch'
+    :param save_args: [OPTIONAL] reference to the model to be saved
     :param epoch_count: an int which is added with #epochs (for better representation of how many epochs have actually passed).
             You can use this for when you run the loop say 3 times, do something else and run it for another 10.
     :param epoch_start_hook: a fn that can be called @ start of every epoch (returns model, opt)
@@ -192,6 +202,9 @@ def generic_loop(epochs: int,
 
         # Train
         with Timer() as timer:
+
+            # Enable dropouts
+            model.train()
 
             # @TODO: Add hook at start of epoch (how to decide what goes in)
             if epoch_start_hook: epoch_start_hook()
@@ -230,6 +243,9 @@ def generic_loop(epochs: int,
         # Val
         with torch.no_grad():
 
+            # Disable dropouts
+            model.eval()
+
             per_epoch_vl_acc = []
             for x, y in tqdm(val_dl):
                 _x = torch.tensor(x, dtype=torch.long, device=device)
@@ -262,11 +278,16 @@ def generic_loop(epochs: int,
             else:
                 save_paras = {'epoch': e}
 
+            # Prepare save_args if none
+            if not save_args:
+                save_args = {'torch_stuff': [tosave('model.torch', model.state_dict())]}
+
             # Call save function and save
             mt_save(save_dir,
                     torch_stuff=None if 'torch_stuff' in save_args.keys() else save_args['torch_stuff'],
                     pickle_stuff=[
-                        tosave('traces.pkl', [train_acc, val_acc, train_loss, lrs])])
+                        tosave('traces.pkl', [train_acc, val_acc, train_loss, lrs]),
+                        tosave('unsup_options.pkl', save_params)])
             print(f"Model saved on Epoch {e} at {save_dir} because of highest training acc so far")
 
             # Log the saved thing
