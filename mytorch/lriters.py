@@ -8,11 +8,14 @@
 """
 from mytorch.utils.goodies import *
 
+class LearningRateSchedule:
+    """ Empty class signifying that any derived class is a learning rate schedule. Purely cosmetic"""
+    pass
 
-class ConstantLR:
-    def __init__(self, highest_lr: float, iteratios: int):
+class ConstantLR(LearningRateSchedule):
+    def __init__(self, highest_lr: float, iterations: int):
         self.lr = highest_lr
-        self.len = iteratios
+        self.len = iterations
 
     def __iter__(self):
         return self
@@ -27,7 +30,7 @@ class ConstantLR:
         pass
 
 
-class CosineAnnealingLR:
+class CosineAnnealingLR(LearningRateSchedule):
     """
         # Learning rate iter which decays w.r.t. cosine curve, #cycles times a batch.
 
@@ -82,7 +85,7 @@ class CosineAnnealingLR:
         self.ptr = -1
 
 
-class SlantedTriangularLR:
+class SlantedTriangularLR(LearningRateSchedule):
     """
         # An LR which first grows, and then decays back to zero w.r.t. iter (n_batch*n_epoch)
 
@@ -156,7 +159,7 @@ class LearningRateScheduler:
         ```
     """
 
-    def __init__(self, lr_args: dict, lr_iterator=ConstantLR, org_lrs:list = None, optimizer: torch.optim = None):
+    def __init__(self, lr_args: dict, lr_iterator: LearningRateSchedule = ConstantLR, org_lrs: list = None, optimizer: torch.optim = None):
         """
         :param optimizer: torch.optim thing. Should have appropriate param groups for effective LR scheduling per layer.
         :param lr_args: a bunch of args (dict) intended for the given lr_iterator

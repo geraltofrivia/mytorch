@@ -13,8 +13,8 @@ from tqdm import tqdm
 from typing import Callable
 
 # Local imports
-from mytorch import dataiters
 from mytorch.utils.goodies import *
+from mytorch import dataiters
 
 
 def simplest_loop(epochs: int,
@@ -143,8 +143,6 @@ def generic_loop(epochs: int,
         # Data input
             Data should be a dict like so:
                 {"train":{"x":np.arr, "y":np.arr}, "val":{"x":np.arr, "y":np.arr} }
-
-            Train_fn must return both loss and y_pred
 
         # Saving Logic
             If the flag is enabled, give in the dir and it'll save traces and the model (and the model encoder)
@@ -296,9 +294,15 @@ def generic_loop(epochs: int,
             saved_info['directory'] = save_dir
 
     if notify:
-        send_notification(data=saved_info, key=notify_key)
+        if not saved_info:
+            message_template = "Your model is done training."
+            send_notification(data=saved_info, key=notify_key, message_template=message_template)
+        else:
+            send_notification(data=saved_info, key=notify_key)
 
     return train_acc, val_acc, train_loss, lrs
+
+
 
 
 # Let's write hooks to mimic phase 2 data prep
