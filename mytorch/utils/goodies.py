@@ -158,7 +158,10 @@ def mt_save_dir(parentdir: Path, _newdir: bool = False):
     assert parentdir.is_dir(), f'{parentdir} is not a directory!'
 
     # Check if the dir exits
-    assert parentdir.exists(), f'{parentdir} does not exist.'
+    try:
+        assert parentdir.exists(), f'{parentdir} does not exist. Making it'
+    except AssertionError:
+        parentdir.mkdir(parents=False)
 
     # List all folders within, and convert them to ints
     existing = sorted([int(x) for x in os.listdir(parentdir) if x.isdigit()], reverse=True)

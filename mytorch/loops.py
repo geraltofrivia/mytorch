@@ -306,7 +306,7 @@ def generic_loop(epochs: int,
 
 
 # Let's write hooks to mimic phase 2 data prep
-def reset_hidden(model):
+def reset_hidden(model, **args):
     for l in model.encoder.hidden:
         for h in l:
             h.data.zero_()
