@@ -3,4 +3,4 @@
 mv ./mytorch/* .
 rm -r ./mytorch
 
-pip install -r ./requirements.txt
+#pip install -r ./requirements.txt
