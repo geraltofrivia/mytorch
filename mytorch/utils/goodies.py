@@ -179,7 +179,7 @@ def mt_save_dir(parentdir: Path, _newdir: bool = False):
 
     return parentdir
 
-    def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch_stuff: list = None, pickle_stuff: list = None,
+def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch_stuff: list = None, pickle_stuff: list = None,
             numpy_stuff: list = None, json_stuff: list = None):
     """
 
