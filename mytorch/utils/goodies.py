@@ -212,7 +212,7 @@ def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch
 
     # Commence saving shit!
     if message:
-        with open(savedir / 'message.txt' if message_fname is None else message_fname, 'w+') as f:
+        with open(savedir / 'message.txt' if message_fname is None else savedir / message_fname, 'w+') as f:
             f.write(message)
 
     for data in torch_stuff or ():
