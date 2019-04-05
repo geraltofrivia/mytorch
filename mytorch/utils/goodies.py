@@ -209,7 +209,11 @@ def mt_save(savedir: Path, message: str= None, torch_stuff: list = None, pickle_
     :return: None
     """
 
-    assert savedir.is_dir(), f'{savedir} is not a directory!'
+    if not savedir.is_dir():
+        warnings.warn(f'{savedir} is not a directory! Made one.')
+        savedir.mkdir()
+
+    # assert savedir.is_dir(), f'{savedir} is not a directory!'
 
     # Commence saving shit!
     if message:
@@ -281,7 +285,7 @@ def send_notification(data: dict, key: str = None, message_template: str = None,
 
     if not message_template:
         message_template = \
-            'A model trained for %(epoch)d epochs, which achieved a %(accuracy)f percent accuracy, is now stored at %(directory)s'
+            'A model trained for %(epoch)d epochs, which achieved a %(accuracy)s percent accuracy, is now stored at %(directory)s'
 
     # Check if data fits the template
     try:

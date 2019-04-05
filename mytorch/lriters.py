@@ -183,7 +183,7 @@ class LearningRateScheduler:
         try:
             return [lr_iter.__next__() for lr_iter in self.lr_iters]
         except StopIteration:
-            raise CustomError(f"{self.__class__} was called more than the predefined times.")
+            raise StopIteration(f"{self.__class__} was called more than the predefined times.")
 
     def reset(self)->None:
         """ To be called when the lr schedule needs to restart (e.g. at the end of every epoch). """
