@@ -155,7 +155,6 @@ def mt_save_dir(parentdir: Path, _newdir: bool = False):
         :param _newdir: bool flag to save in the last dir or make a new one
         :return: None
     """
-    assert parentdir.is_dir(), f'{parentdir} is not a directory!'
 
     # Check if the dir exits
     try:
@@ -209,11 +208,7 @@ def mt_save(savedir: Path, message: str= None, torch_stuff: list = None, pickle_
     :return: None
     """
 
-    if not savedir.is_dir():
-        warnings.warn(f'{savedir} is not a directory! Made one.')
-        savedir.mkdir()
-
-    # assert savedir.is_dir(), f'{savedir} is not a directory!'
+    assert savedir.is_dir(), f'{savedir} is not a directory!'
 
     # Commence saving shit!
     if message:
