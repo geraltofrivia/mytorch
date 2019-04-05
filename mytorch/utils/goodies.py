@@ -212,7 +212,7 @@ def mt_save(savedir: Path, message: str= None, torch_stuff: list = None, pickle_
 
     # Commence saving shit!
     if message:
-        with open('message.txt','w+') as f:
+        with open(savedir / 'message.txt','w+') as f:
             f.write(message)
 
     for data in torch_stuff or ():
