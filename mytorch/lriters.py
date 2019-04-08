@@ -162,7 +162,7 @@ class LearningRateScheduler:
     """
 
     def __init__(self, lr_args: dict, lr_iterator: Type[LearningRateSchedule] = ConstantLR, org_lrs: list = None,
-                 optimizer: torch.optim = None, freeze_mask: Union[list, np.ndarray] = None):
+                 optimizer: torch.optim = None, freeze_mask: np.ndarray = None):
         """
         :param optimizer: torch.optim thing. Should have appropriate param groups for effective LR scheduling per layer.
         :param lr_args: a bunch of args (dict) intended for the given lr_iterator
@@ -177,7 +177,7 @@ class LearningRateScheduler:
             self.opt = optimizer
             self.org_lrs = [group['lr'] for group in self.opt.param_groups]
 
-        self.mask = np.array(freeze_mask) if freeze_mask else np.ones_like(self.org_lrs)
+        self.mask = np.array(freeze_mask) if freeze_mask is not None else np.ones_like(self.org_lrs)
 
         self.lr_iters = [lr_iterator(highest_lr=lr, **lr_args) for lr in self.org_lrs]
 
