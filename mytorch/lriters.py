@@ -7,6 +7,7 @@
     All lr iterators must have a coherent length.
 """
 from mytorch.utils.goodies import *
+from typing import Union
 
 class LearningRateSchedule:
     """ Empty class signifying that any derived class is a learning rate schedule. Purely cosmetic"""
@@ -104,6 +105,7 @@ class SlantedTriangularLR(LearningRateSchedule):
         :param cut_frac: the fraction at which we should stop increasing and start decreasing LR
         :param ratio: another hyperparam deciding the shape of the entire thing.
         :param highest_lr: the undecayed LR.
+        :param freeze_mask: is multiplied to the finally yielded values, can let some layers freeze, thus.
         """
 
         assert cut_frac < 1.0
@@ -159,7 +161,8 @@ class LearningRateScheduler:
         ```
     """
 
-    def __init__(self, lr_args: dict, lr_iterator: LearningRateSchedule = ConstantLR, org_lrs: list = None, optimizer: torch.optim = None):
+    def __init__(self, lr_args: dict, lr_iterator: LearningRateSchedule = ConstantLR, org_lrs: list = None,
+                 optimizer: torch.optim = None, freeze_mask: Union[list, np.ndarray] = None):
         """
         :param optimizer: torch.optim thing. Should have appropriate param groups for effective LR scheduling per layer.
         :param lr_args: a bunch of args (dict) intended for the given lr_iterator
@@ -174,6 +177,8 @@ class LearningRateScheduler:
             self.opt = optimizer
             self.org_lrs = [group['lr'] for group in self.opt.param_groups]
 
+        self.mask = np.array(freeze_mask) if freeze_mask else np.ones_like(self.org_lrs)
+
         self.lr_iters = [lr_iterator(highest_lr=lr, **lr_args) for lr in self.org_lrs]
 
     def __len__(self):
@@ -181,7 +186,7 @@ class LearningRateScheduler:
 
     def get(self):
         try:
-            return [lr_iter.__next__() for lr_iter in self.lr_iters]
+            return [lr_iter.__next__() for lr_iter in self.lr_iters] * self.mask
         except StopIteration:
             raise StopIteration(f"{self.__class__} was called more than the predefined times.")
 
@@ -189,3 +194,11 @@ class LearningRateScheduler:
         """ To be called when the lr schedule needs to restart (e.g. at the end of every epoch). """
         for lr_iter in self.lr_iters:
             lr_iter.reset()
+
+    def unfreeze(self):
+        """ Find the last frozen layer and unfreeze it"""
+
+        # First check if the mask isn't all ones
+        if not (self.mask == 1).all():
+
+            self.mask[np.max(np.where(self.mask == 0))] = 1
