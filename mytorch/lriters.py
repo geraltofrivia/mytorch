@@ -7,7 +7,7 @@
     All lr iterators must have a coherent length.
 """
 from mytorch.utils.goodies import *
-from typing import Union
+from typing import Union, Type
 
 class LearningRateSchedule:
     """ Empty class signifying that any derived class is a learning rate schedule. Purely cosmetic"""
@@ -161,7 +161,7 @@ class LearningRateScheduler:
         ```
     """
 
-    def __init__(self, lr_args: dict, lr_iterator: LearningRateSchedule = ConstantLR, org_lrs: list = None,
+    def __init__(self, lr_args: dict, lr_iterator: Type[LearningRateSchedule] = ConstantLR, org_lrs: list = None,
                  optimizer: torch.optim = None, freeze_mask: Union[list, np.ndarray] = None):
         """
         :param optimizer: torch.optim thing. Should have appropriate param groups for effective LR scheduling per layer.
