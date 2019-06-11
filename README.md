@@ -49,7 +49,7 @@ data = {"train":{"x":X_trn, "y":Y_trn}, "val":{"x":X_val, "y":Y_val} }
 
 # Specifying other hyperparameters
 epochs = 10
-optimizer = torch.optim.SGD(model.parameters())
+optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 loss_function = nn.functional.cross_entropy
 train_function = model      # or model.forward
 predict_function = model.predict
