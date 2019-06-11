@@ -56,7 +56,7 @@ predict_function = model.predict
 
 train_acc, valid_acc, train_loss = loops.simplest_loop(epochs=epochs, data=data, opt=optimizer,
                                                         loss_fn=loss_function, 
-                                                        rain_fn=train_function,
+                                                        train_fn=train_function,
                                                         predict_fn=predict_function)
 ```
 
