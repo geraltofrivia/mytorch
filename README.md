@@ -45,7 +45,7 @@ X_val = np.random.randint(0, 100, (100, 4))
 Y_val = np.random.randint(0, 4, (100, 1))
 
 # Preparing data
-data = {"train":{"x":X_trn, "y":Y_trn}, "val":{"x":X_val, "y":Y_val} }
+data = {"train":{"x":X_trn, "y":Y_trn}, "valid":{"x":X_val, "y":Y_val} }
 
 # Specifying other hyperparameters
 epochs = 10
