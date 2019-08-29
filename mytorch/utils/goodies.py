@@ -9,6 +9,7 @@ import warnings
 import traceback
 import numpy as np
 
+from typing import List
 from pathlib import Path
 from collections import namedtuple
 from torch.autograd import Function
@@ -19,6 +20,7 @@ class CustomError(Exception): pass
 class MismatchedDataError(Exception): pass
 class NotifyAPIKeyNotFoundError(Exception): pass
 class NotifyMessageMismatchError(Exception): pass
+class ImproperCMDArguments(Exception): pass
 class BadParameters(Exception):
     def __init___(self, dErrorArguments):
         Exception.__init__(self, "Unexpected value of parameter {0}".format(dErrorArguments))
@@ -282,7 +284,8 @@ def send_notification(data: dict, key: str = None, message_template: str = None,
 
     if not message_template:
         message_template = \
-            'A model trained for %(epoch)d epochs, which achieved a %(accuracy)s percent accuracy, is now stored at %(directory)s'
+            'A model trained for %(epoch)d epochs, which achieved' \
+            ' a %(accuracy)s percent accuracy, is now stored at %(directory)s'
 
     # Check if data fits the template
     try:
@@ -299,10 +302,98 @@ def send_notification(data: dict, key: str = None, message_template: str = None,
     }
 
     try:
-        response = requests.request("POST", url, data=payload, headers=headers)
+        _ = requests.request("POST", url, data=payload, headers=headers)
         print("Successfully delivered a notification on your cellphone. Cheers!")
     except:     # @TODO: Figure out which exceptions to catch
         traceback.print_exc()
         warnings.warn("Couldn't deliver notifications. Apologies. Report the traceback as an issue on Github, please?")
 
 
+"""
+    Transparent, and simple argument parsing FTW!
+"""
+
+
+def convert_nicely(arg, possible_types=(bool, float, int, str)):
+    """ Try and see what sticks. Possible types can be changed. """
+    for data_type in possible_types:
+        try:
+
+            if data_type is bool:
+                # Hard code this shit
+                if arg in ['T', 'True', 'true']: return True
+                if arg in ['F', 'False', 'false']: return False
+                raise ValueError
+            else:
+                proper_arg = data_type(arg)
+                return proper_arg
+        except ValueError:
+            continue
+    # Here, i.e. no data type really stuck
+    warnings.warn(f"None of the possible datatypes matched for {arg}. Returning as-is")
+    return arg
+
+
+def parse_args(argv: List[str], flags: List[str] = (), compulsory: List[str] = (), compulsory_msg: str = ""):
+    """
+        A function which can, simply put parse args of two ways.
+        1. No flags involved.
+            e.g. python __.py lr 0.1 potato True lives 9 comment "I feel sorry and happy and gay"
+            and get {'lr': 0.1, 'potato': True, 'lives': 9, "comment": "I feel sorry and happy and gay"}
+
+        2. With flags (specified with flags arg)
+            e.g. python __.py lr 0.1 potato lives 9 comment "I feel sorry and happy and gay"
+            and get {'lr': 0.1, 'potato': True, 'lives': 9, "comment": "I feel sorry and happy and gay"}
+
+            Note: If flag specified and not mentioned, it defaults to false.
+            e.g. flags = ['stinky', 'awesome']
+                 python __.py lr 0.1 awesome -> {'lr': 0.1, 'awesome': True, 'stinky': False}
+
+        **Structured Input?**
+            Nopes :D
+            Do it yourself once you get a nicely parsed dict
+
+            We do enable some compulsory flags here, which if not found can return a predefined message
+    """
+    parsed = {flag: False for flag in flags}
+
+    while True:
+        # Get next value
+        try:
+            nm = argv.pop(0)
+        except IndexError:
+            # We emptied the list
+            break
+
+        # Check if this thing is a flag
+        if nm in flags:
+            parsed[nm] = True
+
+            # if len(argv) == 0: continue
+            # # Bonus: check if a value was passed for this, and if so its not a bool.
+            # potential_vl = convert_nicely(argv[0], [float, int, bool])
+            # if type(potential_vl) is not str or type(potential_vl) is not bool:
+            # 	print(potential_vl, potential_vl.__class__)
+            # 	raise ImproperCMDArguments(f"A (non-bool) value was passed for {nm} which is actually a flag.")
+            # if type(potential_vl) is bool:
+            # 	parsed[nm] = potential_vl
+            # 	argv.pop(0)
+
+            continue
+
+        # Get value
+        try:
+            vl = argv.pop(0)
+        except IndexError:
+            raise ImproperCMDArguments(f"A value was expected for {nm} parameter. Not found.")
+
+        parsed[nm] = convert_nicely(vl)
+
+    # Check if all the compulsory things are in here.
+    for key in compulsory:
+        try:
+            assert key in parsed
+        except AssertionError:
+            raise ImproperCMDArguments(compulsory_msg + f"Found keys include {[k for k in parsed.keys()]}")
+
+    return parsed
