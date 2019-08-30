@@ -9,8 +9,8 @@ import warnings
 import traceback
 import numpy as np
 
-from typing import List
 from pathlib import Path
+from typing import List, Dict
 from collections import namedtuple
 from torch.autograd import Function
 
@@ -258,6 +258,7 @@ def str2bool(v)->bool:
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
+
 def send_notification(data: dict, key: str = None, message_template: str = None, title: str = None) -> None:
     """
         Code which can send notification to a phone (using push.techulus.com).
@@ -309,11 +310,7 @@ def send_notification(data: dict, key: str = None, message_template: str = None,
         warnings.warn("Couldn't deliver notifications. Apologies. Report the traceback as an issue on Github, please?")
 
 
-"""
-    Transparent, and simple argument parsing FTW!
-"""
-
-
+# Transparent, and simple argument parsing FTW!
 def convert_nicely(arg, possible_types=(bool, float, int, str)):
     """ Try and see what sticks. Possible types can be changed. """
     for data_type in possible_types:
@@ -334,10 +331,10 @@ def convert_nicely(arg, possible_types=(bool, float, int, str)):
     return arg
 
 
-def parse_args(argv: List[str], flags: List[str] = (), compulsory: List[str] = (), compulsory_msg: str = ""):
+def _parse_args_(argv: List[str], compulsory: List[str] = (), compulsory_msg: str = ""):
     """
-        A function which can, simply put parse args of two ways.
-        1. No flags involved.
+        A function which can, simply put parse args.
+
             e.g. python __.py lr 0.1 potato True lives 9 comment "I feel sorry and happy and gay"
             and get {'lr': 0.1, 'potato': True, 'lives': 9, "comment": "I feel sorry and happy and gay"}
 
@@ -355,38 +352,19 @@ def parse_args(argv: List[str], flags: List[str] = (), compulsory: List[str] = (
 
             We do enable some compulsory flags here, which if not found can return a predefined message
     """
-    parsed = {flag: False for flag in flags}
+    parsed = {}
 
     while True:
-        # Get next value
-        try:
+        try:                                        # Get next value
             nm = argv.pop(0)
-        except IndexError:
-            # We emptied the list
+        except IndexError:                          # # We emptied the list
             break
-
-        # Check if this thing is a flag
-        if nm in flags:
-            parsed[nm] = True
-
-            # if len(argv) == 0: continue
-            # # Bonus: check if a value was passed for this, and if so its not a bool.
-            # potential_vl = convert_nicely(argv[0], [float, int, bool])
-            # if type(potential_vl) is not str or type(potential_vl) is not bool:
-            # 	print(potential_vl, potential_vl.__class__)
-            # 	raise ImproperCMDArguments(f"A (non-bool) value was passed for {nm} which is actually a flag.")
-            # if type(potential_vl) is bool:
-            # 	parsed[nm] = potential_vl
-            # 	argv.pop(0)
-
-            continue
 
         # Get value
         try:
             vl = argv.pop(0)
         except IndexError:
             raise ImproperCMDArguments(f"A value was expected for {nm} parameter. Not found.")
-
         parsed[nm] = convert_nicely(vl)
 
     # Check if all the compulsory things are in here.
@@ -395,5 +373,65 @@ def parse_args(argv: List[str], flags: List[str] = (), compulsory: List[str] = (
             assert key in parsed
         except AssertionError:
             raise ImproperCMDArguments(compulsory_msg + f"Found keys include {[k for k in parsed.keys()]}")
+    return parsed
 
+
+def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: str = "",
+               types: Dict[str, type] = None, discard_unknown_args: bool = False):
+    """
+        I don't like argparse.
+        Don't like specifying a complex two liner for each every config flag/macro.
+
+        If you maintain a dict of default arguments, and want to just overwrite it based on command args,
+        call this function, specify some stuff like
+
+    :param raw_args: unparsed sys.argv[1:]
+    :param compulsory: if some flags must be there
+    :param compulsory_msg: what if some compulsory flags weren't there
+    :param types: a dict of confignm: type(configvl)
+    :param discard_unknown_args: flag so that if something doesn't appear in config it is not returned.
+    :return:
+    """
+
+    # parsed_args = _parse_args_(raw_args, compulsory=compulsory, compulsory_msg=compulsory_msg)
+    #
+    # # Change the "type" of arg, anyway
+
+    parsed = {}
+
+    """
+        Todos: when raising erros bc of improper types, put in a way to handle KeyErrors.
+    """
+    raise NotImplementedError
+
+    while True:
+        try:                                        # Get next value
+            nm = raw_args.pop(0)
+        except IndexError:                          # # We emptied the list
+            break
+
+        # Get value
+        try:
+            vl = raw_args.pop(0)
+        except IndexError:
+            raise ImproperCMDArguments(f"A value was expected for {nm} parameter. Not found.")
+
+        # Get type of value
+        if types:
+            try:
+                parsed[nm] = types[nm](vl)
+            except ValueError:
+
+                raise ImproperCMDArguments(f"The value for {nm}: {vl} can not take the type {types[nm]}! ")
+        else:
+            parsed[nm] = convert_nicely(vl)
+
+    # Check if all the compulsory things are in here.
+    for key in compulsory:
+        try:
+            assert key in parsed
+        except AssertionError:
+            raise ImproperCMDArguments(compulsory_msg + f"Found keys include {[k for k in parsed.keys()]}")
+
+    # Finally check if something unwanted persists here
     return parsed
