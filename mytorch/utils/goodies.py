@@ -331,53 +331,8 @@ def convert_nicely(arg, possible_types=(bool, float, int, str)):
     return arg
 
 
-def _parse_args_(argv: List[str], compulsory: List[str] = (), compulsory_msg: str = ""):
-    """
-        A function which can, simply put parse args.
-
-            e.g. python __.py lr 0.1 potato True lives 9 comment "I feel sorry and happy and gay"
-            and get {'lr': 0.1, 'potato': True, 'lives': 9, "comment": "I feel sorry and happy and gay"}
-
-        2. With flags (specified with flags arg)
-            e.g. python __.py lr 0.1 potato lives 9 comment "I feel sorry and happy and gay"
-            and get {'lr': 0.1, 'potato': True, 'lives': 9, "comment": "I feel sorry and happy and gay"}
-
-            Note: If flag specified and not mentioned, it defaults to false.
-            e.g. flags = ['stinky', 'awesome']
-                 python __.py lr 0.1 awesome -> {'lr': 0.1, 'awesome': True, 'stinky': False}
-
-        **Structured Input?**
-            Nopes :D
-            Do it yourself once you get a nicely parsed dict
-
-            We do enable some compulsory flags here, which if not found can return a predefined message
-    """
-    parsed = {}
-
-    while True:
-        try:                                        # Get next value
-            nm = argv.pop(0)
-        except IndexError:                          # # We emptied the list
-            break
-
-        # Get value
-        try:
-            vl = argv.pop(0)
-        except IndexError:
-            raise ImproperCMDArguments(f"A value was expected for {nm} parameter. Not found.")
-        parsed[nm] = convert_nicely(vl)
-
-    # Check if all the compulsory things are in here.
-    for key in compulsory:
-        try:
-            assert key in parsed
-        except AssertionError:
-            raise ImproperCMDArguments(compulsory_msg + f"Found keys include {[k for k in parsed.keys()]}")
-    return parsed
-
-
 def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: str = "",
-               types: Dict[str, type] = None, discard_unknown_args: bool = False):
+               types: Dict[str, type] = None, discard_unspecified: bool = False):
     """
         I don't like argparse.
         Don't like specifying a complex two liner for each every config flag/macro.
@@ -389,7 +344,7 @@ def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: 
     :param compulsory: if some flags must be there
     :param compulsory_msg: what if some compulsory flags weren't there
     :param types: a dict of confignm: type(configvl)
-    :param discard_unknown_args: flag so that if something doesn't appear in config it is not returned.
+    :param discard_unspecified: flag so that if something doesn't appear in config it is not returned.
     :return:
     """
 
@@ -399,15 +354,11 @@ def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: 
 
     parsed = {}
 
-    """
-        Todos: when raising erros bc of improper types, put in a way to handle KeyErrors.
-    """
-    raise NotImplementedError
-
     while True:
+
         try:                                        # Get next value
             nm = raw_args.pop(0)
-        except IndexError:                          # # We emptied the list
+        except IndexError:                          # We emptied the list
             break
 
         # Get value
@@ -421,8 +372,12 @@ def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: 
             try:
                 parsed[nm] = types[nm](vl)
             except ValueError:
-
                 raise ImproperCMDArguments(f"The value for {nm}: {vl} can not take the type {types[nm]}! ")
+            except KeyError:                    # This name was not included in the types dict
+                if not discard_unspecified:     # Add it nonetheless
+                    parsed[nm] = convert_nicely(vl)
+                else:                           # Discard it.
+                    continue
         else:
             parsed[nm] = convert_nicely(vl)
 

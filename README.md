@@ -1,7 +1,7 @@
 # mytorch is your torch :fire:
-A bag of tricks, aux functions to ease my pytorch experience.
+A transparent boilerplate + bag of tricks to ease my (yours?) (our?) PyTorch dev time.
 
-Many parts here are inspired/copied from [fast.ai](https://github.com/fastai/fastai).
+Some parts here are inspired/copied from [fast.ai](https://github.com/fastai/fastai).
 However, I've tried to keep is such that the control of model (model architecture), vocabulary, preprocessing is always maintained outside of this library.
 The [training loop](./mytorch/loops.py), [data samplers](./mytorch/dataiters.py) etc can be used independent of anything else in here, but ofcourse work better together.
 
