@@ -1,3 +1,4 @@
+requests
 torch
 tqdm
 validators==0.12.2

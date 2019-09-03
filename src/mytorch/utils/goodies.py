@@ -8,19 +8,21 @@ import argparse
 import warnings
 import traceback
 import numpy as np
-
 from pathlib import Path
-from typing import List, Dict
 from collections import namedtuple
 from torch.autograd import Function
+from typing import List, Dict, Union
 
 TRACES_FORMAT = {name: i for i, name in enumerate(['train_acc', 'train_loss', 'val_acc'])}
+
 
 class CustomError(Exception): pass
 class MismatchedDataError(Exception): pass
 class NotifyAPIKeyNotFoundError(Exception): pass
 class NotifyMessageMismatchError(Exception): pass
 class ImproperCMDArguments(Exception): pass
+
+
 class BadParameters(Exception):
     def __init___(self, dErrorArguments):
         Exception.__init__(self, "Unexpected value of parameter {0}".format(dErrorArguments))
@@ -48,7 +50,7 @@ class GradReverse(Function):
         return grad_output.neg()
 
 
-def pad_sequence(matrix_seq, max_length, padidx=0):
+def pad_sequence(matrix_seq: Union[list, np.array], max_length: int, padidx: int = 0):
     """
         Works with list of list as well as numpy matrix
 
@@ -78,14 +80,14 @@ def update_lr(opt: torch.optim, lrs) -> None:
     return lrs
 
 
-def make_opt(model, opt_fn, lr=0.001):
+def make_opt(model, opt_fn: torch.optim, lr: float = 0.001):
     """
         Based on model.layers it creates diff param groups in opt.
     """
     return opt_fn([{'params': l.parameters(), 'lr': lr} for l in model.layers])
 
 
-def default_eval(y_pred, y_true):
+def default_eval(y_pred: torch.Tensor, y_true: torch.Tensor):
     """
         Expects a batch of input
 
