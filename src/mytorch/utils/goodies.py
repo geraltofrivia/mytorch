@@ -11,7 +11,7 @@ import numpy as np
 from pathlib import Path
 from collections import namedtuple
 from torch.autograd import Function
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 
 TRACES_FORMAT = {name: i for i, name in enumerate(['train_acc', 'train_loss', 'val_acc'])}
 
@@ -50,15 +50,21 @@ class GradReverse(Function):
         return grad_output.neg()
 
 
-def pad_sequence(matrix_seq: Union[list, np.array], max_length: int, padidx: int = 0):
+def pad_sequence(matrix_seq: Union[list, np.array], max_length: int = -1, padidx: Any = 0) -> np.array:
     """
-        Works with list of list as well as numpy matrix
+        Pads 2D data.
+
+        + Works with list of list as well as numpy matrix
+        - Does not work with string inputs.
 
     :param matrix_seq: a matrix of list
-    :param max_length: desired pad len
-    :param padidx: the id with which to pad the data
-    :return:
+    :param max_length: desired pad len (if not provided, will pad with max length in matrix_seq)
+    :param padidx: the id with which to pad the data (could be anything)
+    :return: a padded np array
     """
+
+    if max_length < 0:
+        max_length = max([len(x) for x in matrix_seq])
 
     pad_matrix = np.zeros((len(matrix_seq), max_length)) + padidx
     for i, arr in enumerate(matrix_seq):
