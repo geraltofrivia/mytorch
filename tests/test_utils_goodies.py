@@ -13,14 +13,38 @@ class DummyNetwork(nn.Module):
 
     def __init__(self, n_cls: int):
         super().__init__()
-        self.l = nn.Linear(5, n_cls)
+        self.la = nn.Linear(5, 10)
+        self.lb = nn.Linear(10, n_cls)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return nn.functional.softmax(self.l(x), dim=1)
+        return nn.functional.softmax(self.lb(self.la(x)), dim=1)
 
     def forward_gradrev(self, x: torch.Tensor) -> torch.Tensor:
-        lin_op = self.l(x)
+        lin_op = self.lb(self.la(x))
         return nn.functional.softmax(gd.GradReverse.apply(lin_op), dim=1)
+
+    @property
+    def layers(self):
+        return torch.nn.ModuleList([
+            self.la, self.lb
+        ])
+
+
+class LongerNetwork(nn.Module):
+    def __init__(self, cls: int = 3, lin_nm:int = 5):
+        super().__init__()
+        self.lins = [nn.Linear(5, 5) for _ in range(lin_nm)]
+        self.clf = nn.Linear(5, cls)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        for lin in self.lins:
+            x = lin(x)
+
+        return self.clf(x)
+
+    @property
+    def layers(self):
+        return torch.nn.ModuleList(self.lins + [self.clf])
 
 
 class TestFancyDict:
@@ -314,3 +338,197 @@ class TestPadSequence:
             raise AssertionError("The function is expected to throw a type error when padidx is weird. It did not.")
         except TypeError:
             ...
+
+
+class TestMakeOpt:
+    """ Tests for updating learning rates """
+
+    def test_init(self):
+        """ Simplest use case """
+
+        # Make a network
+        net = DummyNetwork(3)
+        optim_fn = torch.optim.SGD
+        try:
+            _ = gd.make_opt(net, optim_fn)
+        except Exception as e:
+            raise AssertionError(f"Creating an optimizer with this function fails with exception: {e}")
+
+    def test_without_layers(self):
+        """ Check if an assertion error is raised when model don't have layers """
+
+        class NoLayerNet(nn.Module):
+
+            def __init__(self):
+                super().__init__()
+
+                self.lina = nn.Linear(5, 10)
+                self.linb = nn.Linear(10, 2)
+
+            def forward(self, x: torch.Tensor) -> torch.Tensor:
+                return self.linb(self.lina(x))
+
+        nolayernet = NoLayerNet()
+
+        try:
+            _ = gd.make_opt(nolayernet, torch.optim.SGD)
+            raise AssertionError("When a model with no layers is passed, an assertion error was expected.")
+        except AssertionError:
+            ...
+        except Exception as e:
+            print("Some other error raised!")
+            raise AssertionError(f"When a model with no layers is passed, an assertion error was expected."
+                                 f"Got the following Exception instead: {e}")
+
+    def test_param_groups(self):
+        """ Check if param groups are made. Expected 2 for dummy net. """
+        # Make a network
+        net = DummyNetwork(3)
+        optim_fn = torch.optim.SGD
+
+        optim = gd.make_opt(net, optim_fn)
+
+        assert optim.param_groups.__len__() > 1, "Optimizer is expected to have two param groups here."
+
+
+class TestUpdateLR:
+    """ Test if the updating learning rate based on param grouped optimizer works. """
+
+    def test_init(self):
+        """ Test if the function can be called in the simplest setting """
+        net = DummyNetwork(3)
+        optim = gd.make_opt(net, torch.optim.SGD)
+        lr = 0.1
+
+        try:
+            _ = gd.update_lr(optim, lr)
+        except Exception as e:
+            raise AssertionError(f"The fn fails in the simplest setting with the exception being: {e}")
+
+    def test_float_lr(self):
+        """ Test if a float lr can update the optim """
+        net = DummyNetwork(3)
+        optim = gd.make_opt(net, torch.optim.SGD)
+        lr = 0.1234323421
+
+        gd.update_lr(optim, lr)
+
+        for param_grp in optim.param_groups:
+            assert param_grp['lr'] == lr, f"Cant reliably update with float lrs. Expected {lr}, got {param_grp['lr']}"
+
+    def test_int_lr(self):
+        """ Test if a int lr can update the optim """
+        """ Test if a float lr can update the optim """
+        net = DummyNetwork(3)
+        optim = gd.make_opt(net, torch.optim.SGD)
+        lr = 23
+
+        gd.update_lr(optim, lr)
+
+        for param_grp in optim.param_groups:
+            assert param_grp['lr'] == lr, f"Cant reliably update with float lrs. Expected {lr}, got {param_grp['lr']}"
+
+    def test_list_lr(self):
+        """ Test if we can pass a list corresponding to the layers """
+        net = DummyNetwork(3)
+        optim = gd.make_opt(net, torch.optim.SGD)
+        lr = [0.2, 0.4]
+
+        gd.update_lr(optim, lr)
+
+        for i, param_grp in enumerate(optim.param_groups):
+            assert param_grp['lr'] == lr[i], f"Cant reliably update with float lrs. " \
+                                             f"Expected {lr[i]}, got {param_grp['lr']}"
+
+    def test_nparr_lr(self):
+        """ Test if can pass an ndarray of the same len as that of layers """
+        net = DummyNetwork(3)
+        optim = gd.make_opt(net, torch.optim.SGD)
+        lr = np.random.randn(2)
+
+        gd.update_lr(optim, lr)
+
+        for i, param_grp in enumerate(optim.param_groups):
+            assert param_grp['lr'] == lr[i], f"Cant reliably update with float lrs. " \
+                                             f"Expected {lr[i]}, got {param_grp['lr']}"
+
+    def test_list_smaller(self):
+        """ What happens when less lrs than param groups """
+        net = LongerNetwork(lin_nm=5)
+        optim = gd.make_opt(net, torch.optim.SGD)
+        lr = [0.1, 0.3, 0.1, 2]
+
+        try:
+            gd.update_lr(optim, lr)
+            raise AssertionError("Expected an assertion error when a smaller length is passed to the fn")
+        except AssertionError:
+            ...
+
+    def test_list_larger(self):
+        """ When happens when more lrs than param groups """
+        net = LongerNetwork(lin_nm=5)
+        optim = gd.make_opt(net, torch.optim.SGD)
+        lr = [0.1, 0.3, 0.1, 2]
+
+        try:
+            gd.update_lr(optim, lr)
+            raise AssertionError("Expected an assertion error when a smaller length is passed to the fn")
+        except AssertionError:
+            ...
+
+
+class TestDefaultEval:
+    """ Can it truly return accuracy? """
+
+    def test_init(self):
+        """ Does this work? """
+        y_true = torch.randint(0, 5, (10,))
+        y_pred = torch.randn(10, 5)
+
+        try:
+            _ = gd.default_eval(y_pred=y_pred, y_true=y_true)
+        except Exception as e:
+            raise AssertionError(f"This fn doesn't work. Exception received: {e}")
+
+    def test_perfmatch(self):
+        """ When acc is supposed to be one """
+        yp = torch.tensor([
+          [0.1, 0.2, 0.3, 0.1, 0.9],
+          [0.4, 0.1, -0.3, 0.05, 0.3],
+          [0.01, 0.3, 0.19, 0.9, 0.5],
+          [0.2, 0.5, 0.8, 0.94, 0.2]
+        ])
+        yt = torch.tensor([4, 0, 3, 3])
+
+        acc = gd.default_eval(y_pred=yp, y_true=yt)
+
+        assert acc == 1.0, f"Received acc {acc}, Expected 1.0"
+
+    def test_halfmatch(self):
+        """ When acc is supposed to be half """
+        yp = torch.tensor([
+          [0.1, 2.2, 0.3, 0.1, 0.9],
+          [0.4, 0.1, -0.3, 0.05, 0.3],
+          [0.01, 0.3, 0.19, 0.9, 0.5],
+          [0.2, 1.5, 0.8, 0.94, 0.2]
+        ])
+        yt = torch.tensor([4, 0, 3, 3])
+
+        acc = gd.default_eval(y_pred=yp, y_true=yt)
+
+        assert acc == 0.5, f"Received acc {acc}, Expected 0.5"
+
+    def test_nomatch(self):
+        """ When acc is supposed to be zero """
+        yp = torch.tensor([
+            [0.1, 2.2, 0.3, 0.1, 0.9],
+            [0.4, 0.1, 1.3, 0.05, 0.3],
+            [0.01, 9.3, 0.19, 0.9, 0.5],
+            [0.2, 1.5, 0.8, 0.94, 0.2]
+        ])
+        yt = torch.tensor([4, 0, 3, 3])
+
+        acc = gd.default_eval(y_pred=yp, y_true=yt)
+
+        assert acc == 0.0, f"Received acc {acc}, Expected 0.0"
+

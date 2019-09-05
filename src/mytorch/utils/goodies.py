@@ -73,13 +73,17 @@ def pad_sequence(matrix_seq: Union[list, np.array], max_length: int = -1, padidx
     return pad_matrix
 
 
-def update_lr(opt: torch.optim, lrs) -> None:
+def update_lr(opt: torch.optim, lrs: Union[int, float, list, np.array]) -> Union[int, float, list, np.array]:
     """ Updates lr of the opt. Give it one num for uniform update. Arr otherwise """
 
-    if type(lrs) is float:
+    if type(lrs) in [float, int]:
         for grp in opt.param_groups:
             grp['lr'] = lrs
     else:
+
+        # Check for lens
+        assert len(opt.param_groups) == len(lrs), f"Mismatch b/w param group ({len(opt.param_groups)}) " \
+                                                  f"and lr list sizes ({len(lrs)})."
         for grp, lr in zip(opt.param_groups, lrs):
             grp['lr'] = lr
 
@@ -90,10 +94,11 @@ def make_opt(model, opt_fn: torch.optim, lr: float = 0.001):
     """
         Based on model.layers it creates diff param groups in opt.
     """
+    assert hasattr(model, 'layers'), "The model does not have a layers attribute. Check TODO-URL for a how-to"
     return opt_fn([{'params': l.parameters(), 'lr': lr} for l in model.layers])
 
 
-def default_eval(y_pred: torch.Tensor, y_true: torch.Tensor):
+def default_eval(y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
     """
         Expects a batch of input
 
@@ -355,10 +360,6 @@ def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: 
     :param discard_unspecified: flag so that if something doesn't appear in config it is not returned.
     :return:
     """
-
-    # parsed_args = _parse_args_(raw_args, compulsory=compulsory, compulsory_msg=compulsory_msg)
-    #
-    # # Change the "type" of arg, anyway
 
     parsed = {}
 
