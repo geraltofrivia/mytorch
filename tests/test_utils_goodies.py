@@ -6,7 +6,7 @@ import torch.nn as nn
 from typing import Any
 
 # Testing code imports
-from src.mytorch.utils import goodies as gd
+from mytorch.utils import goodies as gd
 
 
 class DummyNetwork(nn.Module):
@@ -531,4 +531,3 @@ class TestDefaultEval:
         acc = gd.default_eval(y_pred=yp, y_true=yt)
 
         assert acc == 0.0, f"Received acc {acc}, Expected 0.0"
-
