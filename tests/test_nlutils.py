@@ -1,7 +1,6 @@
 from mytorch import nlutils as nlu
 from mytorch.utils.goodies import UnknownSpacyLang
 
-
 class TestGetVocab:
     """ Test the internal get vocab function. """
 

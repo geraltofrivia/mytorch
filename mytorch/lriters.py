@@ -6,7 +6,7 @@
 
     All lr iterators must have a coherent length.
 """
-from mytorch.utils.goodies import *
+from .utils.goodies import *
 from typing import Union, Type
 
 class LearningRateSchedule:

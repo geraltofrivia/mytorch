@@ -11,7 +11,7 @@ import numpy as np
 from pathlib import Path
 from collections import namedtuple
 from torch.autograd import Function
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Union, Any, Optional
 
 TRACES_FORMAT = {name: i for i, name in enumerate(['train_acc', 'train_loss', 'val_acc'])}
 
@@ -21,6 +21,7 @@ class MismatchedDataError(Exception): pass
 class NotifyAPIKeyNotFoundError(Exception): pass
 class NotifyMessageMismatchError(Exception): pass
 class ImproperCMDArguments(Exception): pass
+class UnknownSpacyLang(ValueError): pass
 
 
 class BadParameters(Exception):

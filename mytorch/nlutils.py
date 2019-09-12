@@ -8,7 +8,7 @@ import spacy
 from spacy.tokenizer import Tokenizer
 
 # Local Imports
-from mytorch.utils.goodies import *
+from .utils.goodies import *
 
 def _get_spacy_vocab_(lang: str) -> spacy.vocab.Vocab:
     """

@@ -1,7 +1,7 @@
 """
     A file which contain simple data iterators.
 """
-from mytorch.utils.goodies import *
+from .utils.goodies import *
 
 
 class SimplestSampler:
