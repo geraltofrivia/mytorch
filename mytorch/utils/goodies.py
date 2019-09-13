@@ -259,6 +259,17 @@ def str2bool(v)->bool:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
+def compute_mask(t, padding_idx=0):
+    """
+    compute mask on given tensor t
+    :param t:
+    :param padding_idx:
+    :return:
+    """
+    mask = torch.ne(t, padding_idx).float()
+    return mask
+
+
 def send_notification(data: dict, key: str = None, message_template: str = None, title: str = None) -> None:
     """
         Code which can send notification to a phone (using push.techulus.com).
