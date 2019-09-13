@@ -10,9 +10,9 @@ import traceback
 import numpy as np
 
 from pathlib import Path
-from typing import List, Dict
 from collections import namedtuple
 from torch.autograd import Function
+from typing import List, Dict, Union
 
 TRACES_FORMAT = {name: i for i, name in enumerate(['train_acc', 'train_loss', 'val_acc'])}
 
@@ -259,14 +259,17 @@ def str2bool(v)->bool:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def compute_mask(t, padding_idx=0):
+def compute_mask(t: Union[torch.Tensor, np.array], padding_idx=0):
     """
     compute mask on given tensor t
-    :param t:
-    :param padding_idx:
-    :return:
+    :param t: either a tensor or a nparry
+    :param padding_idx: the ID used to represented padded data
+    :return: a mask of the same shape as t
     """
-    mask = torch.ne(t, padding_idx).float()
+    if type(t) is np.ndarray:
+        mask = np.not_equal(t, padding_idx)*1.0
+    else:
+        mask = torch.ne(t, padding_idx).float()
     return mask
 
 
