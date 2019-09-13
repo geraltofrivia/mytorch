@@ -14,7 +14,7 @@ from typing import Callable
 
 # Local imports
 from .utils.goodies import *
-import dataiters
+from . import dataiters
 
 
 def simplest_loop(epochs: int,
