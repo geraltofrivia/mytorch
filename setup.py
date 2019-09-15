@@ -4,7 +4,7 @@ with open("README.md", "r") as readmefile:
     package_description = readmefile.read()
 
 setup(
-    name="mytorch",
+    name="my-torch",
     version="0.0.1",
     author="Priyansh Trivedi",
     author_email="mail@priyansh.page",
@@ -15,11 +15,11 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 1 - Planning",
         "Programming Language :: Python :: 3",
         "Operating System :: Unix"
     ],
     keywords=[
-        'deep learning', 'pytorch', 'boilerplate', 'machine learning', 'neural networks', 'preprocessing'
+        'deep learning', 'pytorch', 'boilerplate', 'machine learning', 'neural network', 'preprocessing'
     ]
 )
