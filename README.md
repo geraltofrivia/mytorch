@@ -1,4 +1,8 @@
 # mytorch is your torch :fire:
+
+[![Build Status](https://travis-ci.org/geraltofrivia/mytorch.svg?branch=master)](https://travis-ci.org/geraltofrivia/mytorch)
+![PyPI](https://img.shields.io/pypi/v/my-torch)
+
 A transparent boilerplate + bag of tricks to ease my (yours?) (our?) PyTorch dev time.
 
 Some parts here are inspired/copied from [fast.ai](https://github.com/fastai/fastai).
@@ -112,3 +116,11 @@ I'm eager to implement more tricks/features in the library, while maintaining th
 Open to suggestions and contributions. Thanks! 
 
 PS: Always appreciate more tests.
+
+# Acknowledgements
+
+An important part of the code was designed, and tested by :
+
+> [Gaurav Maheshwari](https://gauravm.gitbook.io/) &nbsp;&middot;&nbsp;
+> GitHub [@saist1993](https://github.com/saist1993/) &nbsp;&middot;&nbsp;
+> Twitter [@__gauravm](https://twitter.com/__gauravm)
