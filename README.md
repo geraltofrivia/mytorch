@@ -13,9 +13,15 @@ I'll be adding proper documentation, examples here, gradually.
 
 (Added hyphen because someone beat me to the [mytorch](https://pypi.org/project/mytorch/) package name.)
 
+# Idea
+
+Use/Ignore most parts of the library. Will not hide code from you, and you retain control over your models. 
+    If you need just one thing, no fluff, feel free to copy-paste snippets of the code from this repo to yours.
+    I'd be delighted if you drop me a line, if you found this stuff helpful.
+
 # Features
 
-1. **Training Loop**
+1. **Customizable Training Loop**
     - Callbacks @ epoch start and end
     - Weight Decay (see [this blog post](https://www.fast.ai/2018/07/02/adam-weight-decay/) )
     - :scissors: Gradient Clipping
@@ -24,13 +30,9 @@ I'll be adding proper documentation, examples here, gradually.
     
 2. **Sortist Sampling** 
     
-    TODO: link & description & refs
 3. **Custom Learning Rate Schedules** 
 
-    TODO: link & description & refs
 4. Customisability & Flat Hierarchy
-    
-    Use/Ignore most parts of the library. Will not hide code from you, and you retain control over your models. 
 
 # Usage
 
@@ -86,7 +88,7 @@ But If you'd like this completely unnecessary gimmick, follow along:
 2. Sign In/Up and get yout **api key**
 3. Making the key available. Options:
     1. in a file, named `./push-techulus-key`, in plaintext at the root dir of this folder. You could just `echo 'your-api-key' >> ./push-techulus-ley`.
-    2. through arguments to the training loop (_@TODO: Add link :to relevant line_) as a string
+    2. through arguments to the training loop as a string
 4. Pass flag to loop, to enable notifications
 5. Done :balloon: You'll be notified when your model's done training.
 
