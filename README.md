@@ -100,7 +100,7 @@ But If you'd like this completely unnecessary gimmick, follow along:
 1. Models
     1. Classifiers 
     1. Encoders
-    1. ~~Transformers~~ (USE [pytorch-transformers by :hugging_face:](https://github.com/huggingface/pytorch-transformers))
+    1. ~~Transformers~~ (USE [pytorch-transformers by :huggingface:](https://github.com/huggingface/pytorch-transformers))
 3. Using FastProgress for progress + live plotting
 1. [W&B](https://wandb.ai) integration
 4. ?? (tell me [here](https://github.com/geraltofrivia/mytorch/issues))  
