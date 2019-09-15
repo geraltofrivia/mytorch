@@ -7,6 +7,11 @@ The [training loop](./mytorch/loops.py), [data samplers](./mytorch/dataiters.py)
 
 I'll be adding proper documentation, examples here, gradually.
 
+# Installation
+
+`pip install my-torch`
+
+(Added hyphen because someone beat me to the [mytorch](https://pypi.org/project/mytorch/) package name.)
 
 # Features
 
@@ -85,12 +90,23 @@ But If you'd like this completely unnecessary gimmick, follow along:
 4. Pass flag to loop, to enable notifications
 5. Done :balloon: You'll be notified when your model's done training.
 
+# Changelog
+#### v0.0.1
+1. Added some tests.
+1. Wrapping spaCy tokenizers, with some vocab management. 
+1. Packaging :confetti:
+
 # Upcoming
-1. :bangbang: Tests
-2. :exclamation: Packaging this up to easy set-up post cloning (its a hack right now. Sorry ^.^)
+1. Models
+    1. Classifiers 
+    1. Encoders
+    1. ~~Transformers~~ (USE [pytorch-transformers by :hugging_face:](https://github.com/huggingface/pytorch-transformers))
 3. Using FastProgress for progress + live plotting
+1. [W&B](https://wandb.ai) integration
 4. ?? (tell me [here](https://github.com/geraltofrivia/mytorch/issues))  
 
 # Contributions
 I'm eager to implement more tricks/features in the library, while maintaining the flat structure (and ensuring backward compatibility). 
 Open to suggestions and contributions. Thanks! 
+
+PS: Always appreciate more tests.

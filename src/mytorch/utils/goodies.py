@@ -8,19 +8,22 @@ import argparse
 import warnings
 import traceback
 import numpy as np
-
 from pathlib import Path
 from collections import namedtuple
 from torch.autograd import Function
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any, Optional
 
 TRACES_FORMAT = {name: i for i, name in enumerate(['train_acc', 'train_loss', 'val_acc'])}
+
 
 class CustomError(Exception): pass
 class MismatchedDataError(Exception): pass
 class NotifyAPIKeyNotFoundError(Exception): pass
 class NotifyMessageMismatchError(Exception): pass
 class ImproperCMDArguments(Exception): pass
+class UnknownSpacyLang(ValueError): pass
+
+
 class BadParameters(Exception):
     def __init___(self, dErrorArguments):
         Exception.__init__(self, "Unexpected value of parameter {0}".format(dErrorArguments))
@@ -48,15 +51,21 @@ class GradReverse(Function):
         return grad_output.neg()
 
 
-def pad_sequence(matrix_seq, max_length, padidx=0):
+def pad_sequence(matrix_seq: Union[list, np.array], max_length: int = -1, padidx: Any = 0) -> np.array:
     """
-        Works with list of list as well as numpy matrix
+        Pads 2D data.
+
+        + Works with list of list as well as numpy matrix
+        - Does not work with string inputs.
 
     :param matrix_seq: a matrix of list
-    :param max_length: desired pad len
-    :param padidx: the id with which to pad the data
-    :return:
+    :param max_length: desired pad len (if not provided, will pad with max length in matrix_seq)
+    :param padidx: the id with which to pad the data (could be anything)
+    :return: a padded np array
     """
+
+    if max_length < 0:
+        max_length = max([len(x) for x in matrix_seq])
 
     pad_matrix = np.zeros((len(matrix_seq), max_length)) + padidx
     for i, arr in enumerate(matrix_seq):
@@ -65,27 +74,32 @@ def pad_sequence(matrix_seq, max_length, padidx=0):
     return pad_matrix
 
 
-def update_lr(opt: torch.optim, lrs) -> None:
+def update_lr(opt: torch.optim, lrs: Union[int, float, list, np.array]) -> Union[int, float, list, np.array]:
     """ Updates lr of the opt. Give it one num for uniform update. Arr otherwise """
 
-    if type(lrs) is float:
+    if type(lrs) in [float, int]:
         for grp in opt.param_groups:
             grp['lr'] = lrs
     else:
+
+        # Check for lens
+        assert len(opt.param_groups) == len(lrs), f"Mismatch b/w param group ({len(opt.param_groups)}) " \
+                                                  f"and lr list sizes ({len(lrs)})."
         for grp, lr in zip(opt.param_groups, lrs):
             grp['lr'] = lr
 
     return lrs
 
 
-def make_opt(model, opt_fn, lr=0.001):
+def make_opt(model, opt_fn: torch.optim, lr: float = 0.001):
     """
         Based on model.layers it creates diff param groups in opt.
     """
+    assert hasattr(model, 'layers'), "The model does not have a layers attribute. Check TODO-URL for a how-to"
     return opt_fn([{'params': l.parameters(), 'lr': lr} for l in model.layers])
 
 
-def default_eval(y_pred, y_true):
+def default_eval(y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
     """
         Expects a batch of input
 
@@ -121,7 +135,7 @@ class Counter(dict):
     def sorted(self, data=None):
         """
             If data given, then sort that and return, if not, sort self.
-        :param dict: optional: dict
+        :param data: dict
         :return:
         """
         if not data:
@@ -132,7 +146,7 @@ class Counter(dict):
         return sorted({tok: freq for tok, freq in self.items() if freq > f})
 
 
-tosave = namedtuple('ObjectsToSave','fname obj')
+tosave = namedtuple('ObjectsToSave', 'fname obj')
 
 def mt_save_dir(parentdir: Path, _newdir: bool = False):
     """
@@ -361,10 +375,6 @@ def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: 
     :param discard_unspecified: flag so that if something doesn't appear in config it is not returned.
     :return:
     """
-
-    # parsed_args = _parse_args_(raw_args, compulsory=compulsory, compulsory_msg=compulsory_msg)
-    #
-    # # Change the "type" of arg, anyway
 
     parsed = {}
 

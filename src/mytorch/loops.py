@@ -13,8 +13,8 @@ from tqdm import tqdm
 from typing import Callable
 
 # Local imports
-from mytorch.utils.goodies import *
-from mytorch import dataiters
+from .utils.goodies import *
+from . import dataiters
 
 
 def simplest_loop(epochs: int,

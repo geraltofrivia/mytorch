@@ -1,7 +1,7 @@
 """
     A file which contain simple data iterators.
 """
-from mytorch.utils.goodies import *
+from .utils.goodies import *
 
 
 class SimplestSampler:
@@ -32,6 +32,10 @@ class SimplestSampler:
         return self
 
     def __next__(self):
+        """
+        @TODO: edge case: Return leftovers.
+        :return:
+        """
         if self.i + self.bs >= self.n:
             raise StopIteration
 
