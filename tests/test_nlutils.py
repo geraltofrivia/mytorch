@@ -28,6 +28,33 @@ class TestGetVocab:
                     raise AssertionError(f"Expected Language {lang_name} to be known.")
 
 
+class TestPreProc:
+    """ Tests for the preproc method which can tokenize + idfy stuff """
+
+    def test_init(self):
+        ...
+
+    def test_simple_text(self):
+        """ Test by giving it few hardcoded sentences, and see if all the items are properly tokenized """
+        ...
+
+    def test_foreign_text(self):
+        """ Try with German, Spanish text. """
+        ...
+
+    def test_parallel(self):
+        """ Increase the threadcount, and see if you get a time improvement """
+        ...
+
+    def test_vocab(self):
+        """ Test with the vocab flag as true """
+        ...
+
+    def test_spacy_vocab_lang(self):
+        """ When giving a full vocab object in lang """
+        ...
+
+
 if __name__ == "__main__":
     t = TestGetVocab()
     t.test_init()

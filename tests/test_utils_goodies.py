@@ -531,3 +531,34 @@ class TestDefaultEval:
         acc = gd.default_eval(y_pred=yp, y_true=yt)
 
         assert acc == 0.0, f"Received acc {acc}, Expected 0.0"
+
+
+class TestTimer:
+    """ Tests for the context thing which finds run time of a codeblock """
+
+    def test_init(self):
+        ...
+
+    def test_sleep(self):
+        """ use some os sleep thing """
+        ...
+
+    def test_empty(self):
+        """ Empty context block """
+        ...
+
+    def test_mid_access(self):
+        """ Can you get interval within the context """
+        ...
+
+    def test_nested(self):
+        """ Test by nesting these things a level or two """
+        ...
+
+    def test_sequential(self):
+        """ Make a timer. Make one again, and see if the interval still makes sense """
+        ...
+
+
+class TestCounter:
+    """ """
