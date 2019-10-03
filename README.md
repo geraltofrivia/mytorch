@@ -1,7 +1,10 @@
 # mytorch is your torch :fire:
 
 [![Build Status](https://travis-ci.org/geraltofrivia/mytorch.svg?branch=master)](https://travis-ci.org/geraltofrivia/mytorch)
+![GitHub](https://img.shields.io/github/license/geraltofrivia/mytorch)
 ![PyPI](https://img.shields.io/pypi/v/my-torch)
+
+
 
 A transparent boilerplate + bag of tricks to ease my (yours?) (our?) PyTorch dev time.
 

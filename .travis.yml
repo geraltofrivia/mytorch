@@ -7,5 +7,9 @@ install:
   - pip install -r requirements.txt
   - pip install torch==1.2.0+cpu torchvision==0.4.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 # command to run tests
+before_script:
+  - "flake8 ."
 script:
   - pytest
+after_success:
+  - coveralls

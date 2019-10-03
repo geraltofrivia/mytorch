@@ -14,6 +14,7 @@ setup(
     url="https://github.com/geraltofrivia/mytorch/",
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    install_requires=['spacy', 'tqdm', 'numpy'],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Programming Language :: Python :: 3",

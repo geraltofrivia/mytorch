@@ -2,6 +2,5 @@ spacy
 requests
 torch
 tqdm
-validators
 numpy
 fastprogress
