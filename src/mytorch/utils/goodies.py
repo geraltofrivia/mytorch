@@ -176,7 +176,7 @@ def mt_save_dir(parentdir: Path, _newdir: bool = False):
     try:
         assert parentdir.exists(), f'{parentdir} does not exist. Making it'
     except AssertionError:
-        parentdir.mkdir(parents=False)
+        parentdir.mkdir(parents=True)
 
     # List all folders within, and convert them to ints
     existing = sorted([int(x) for x in os.listdir(parentdir) if x.isdigit()], reverse=True)
@@ -210,7 +210,7 @@ def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch
         savedir = save_dir(parentdir, _newdir=True)
         save(
                 savedir,
-                torch_stuff = [tosave(fname='model.torch', obj=encoder)],
+                torch_stuff = [tosave(fname='model.torch', obj=encoder.state_dict()],
                 pickle_stuff = [tosave('traces.pkl', traces)]
             )
 

@@ -1,7 +1,8 @@
 """
     A file which contain simple data iterators.
 """
-from .utils.goodies import *
+import numpy as np
+from .utils.goodies import MismatchedDataError, pad_sequence
 
 
 class SimplestSampler:
