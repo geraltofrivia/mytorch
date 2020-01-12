@@ -32,7 +32,7 @@ def _get_spacy_vocab_(lang: str) -> spacy.vocab.Vocab:
 
 
 def preproc(data: Dict[str, List[str]], language: Union[spacy.vocab.Vocab, str] = 'en',
-            n_threads: int = 1, vocabularize: bool = False) \
+            n_threads: int = 1) \
         -> (Dict[str, List[List]], Optional[List[str]], Optional[Dict[str, int]]):
     """
         A slightly abstract method to
@@ -47,16 +47,10 @@ def preproc(data: Dict[str, List[str]], language: Union[spacy.vocab.Vocab, str] 
     :param data: A dict of {'any random tag': list/iter of data}
     :param language: A string which decides what language does the next belong to.
     :param n_threads: 1
-    :param vocabularize: a flag which if turned on, will also convert text to ID and return relevant mappings
-    :return: if vocabularize:
-                -> Dict of original keys and values where values are no longer a list of strings but a list of list of ints
-                -> A list of unique tokens
-                -> A corresponding Dict of {str:int}
-            else:
-                -> Dict of original keys and values where values are no longer a list of strings but a list of list of strs
+    :return: Dict of original keys and values where values are no longer a list of strs but a list of list of ints
     """
 
-    stoi, tok_data = {}, {k: [] for k in data.keys()}
+    tok_data = {k: [] for k in data.keys()}
 
     # Get spacy Vocab
     vocab = _get_spacy_vocab_(language) if type(language) is str else language
@@ -64,12 +58,6 @@ def preproc(data: Dict[str, List[str]], language: Union[spacy.vocab.Vocab, str] 
 
     for key, value in data.items():
         for doc in tokenizer.pipe(value, batch_size=10000, n_threads=5):
-            if vocabularize:
-                tok_data[key].append([stoi.setdefault(tok.text, len(stoi)) for tok in doc])
-            else:
-                tok_data[key].append([tok.text for tok in doc])
+            tok_data[key].append([tok.text for tok in doc])
 
-    if vocabularize:
-        return tok_data
-    else:
-        return tok_data, stoi
+    return tok_data

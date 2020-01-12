@@ -29,7 +29,7 @@ class TestGetVocab:
 
 
 class TestPreProc:
-    """ Tests for the preproc method which can tokenize + idfy stuff """
+    """ Tests for the preproc method which can tokenize stuff """
 
     def test_init(self):
         ...
@@ -44,10 +44,6 @@ class TestPreProc:
 
     def test_parallel(self):
         """ Increase the threadcount, and see if you get a time improvement """
-        ...
-
-    def test_vocab(self):
-        """ Test with the vocab flag as true """
         ...
 
     def test_spacy_vocab_lang(self):

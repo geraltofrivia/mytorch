@@ -10,7 +10,7 @@ A transparent boilerplate + bag of tricks to ease my (yours?) (our?) PyTorch dev
 
 Some parts here are inspired/copied from [fast.ai](https://github.com/fastai/fastai).
 However, I've tried to keep is such that the control of model (model architecture), vocabulary, preprocessing is always maintained outside of this library.
-The [training loop](./mytorch/loops.py), [data samplers](./mytorch/dataiters.py) etc can be used independent of anything else in here, but ofcourse work better together.
+The [training loop](src/mytorch/loops.py), [data samplers](src/mytorch/dataiters.py) etc can be used independent of anything else in here, but ofcourse work better together.
 
 I'll be adding proper documentation, examples here, gradually.
 
