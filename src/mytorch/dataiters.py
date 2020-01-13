@@ -12,7 +12,7 @@ class SimplestSampler:
     :return:
     """
 
-    def __init__(self, data, bs: int = 64):
+    def __init__(self, data, _batchsize: int = 64):
 
         try:
             assert len(data["x"]) == len(data["y"])
@@ -23,7 +23,7 @@ class SimplestSampler:
         self.x = data["x"]
         self.y = data["y"]
         self.n = len(self.x)
-        self.bs = bs  # Batch Size
+        self.bs = _batchsize  # Batch Size
 
     def __len__(self):
         return self.n // self.bs - (1 if self.n % self.bs else 0)
@@ -56,7 +56,7 @@ class SortishSampler:
 
         This needs to be re-sorted every iteration.
             Hence the data is duplicated internally.
-            Call reset at epoch end to resort it.
+            Call reset at epoch end to re-sort it.
 
             Or you could init a new instance of this :peace:
     """
