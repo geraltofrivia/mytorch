@@ -46,6 +46,80 @@ class SimplestSampler:
         return _x, _y
 
 
+class NegativeSampler:
+    """
+        Given X and Y matrices (or lists of lists),
+            it returns a batch worth of stuff (x, y+, [y-]) upon __next__
+
+        Problems: handling edge cases (only take :bs chunks, what happens at the end?)
+    """
+
+    def __init__(self, data: dict, _batchsize: int = 64, _negative: int = 1):
+        """
+
+        :param data:
+        :param _batchsize:
+        :param _negative:
+        """
+
+        try:
+            assert len(data["x"]) == len(data["y"])
+        except AssertionError:
+
+            raise MismatchedDataError(
+                f"Length of x is {len(data['x'])} while of y is {len(data['y'])}")
+
+        self.x = data["x"]
+        self.y = np.array(data["y"])
+        self.n = len(self.x)
+        self.n_neg = _negative  # Number of negative samples per iter
+        self.bs = _batchsize    # Batch Size
+
+    def __len__(self):
+        return self.n // self.bs - (1 if self.n % self.bs else 0)
+
+    def __iter__(self):
+        self.i, self.iter = 0, 0
+        return self
+
+    def _get_neg_(self, _y, _bs: int = None, _i: int = None):
+        """
+            Consider the _y, i, bs, and n_neg
+        :return:
+        """
+        _bs = self.bs if _bs is None else _bs
+        _i = self.i if _i is None else _i
+
+        # y_ind is an arange repeated for the batch
+        y_ind = np.arange(self.y.shape[0])
+
+        # y_sel is True for all places where we can select a valid neg; False otherwise
+        y_sel = np.ones((_bs, y_ind.shape[0]))
+        for _x, _y in enumerate(range(_i, _i+_bs)):
+            y_sel[_x, _y] = 0
+        y_sel = y_sel != 0
+
+        neg_index = np.array([np.random.choice(y_ind[y_sel[i]], self.n_neg)
+                              for i in range(_bs)])
+
+        _y_neg = self.y[neg_index]      # Expected shape (bs, n_neg)
+        return _y_neg
+
+    def __next__(self):
+        """
+            @TODO: edge case: Return leftovers.
+        :return: x: (n, ?); y: (n, 1); (n, n_neg, 1)
+        """
+        if self.i + self.bs >= self.n:
+            raise StopIteration
+
+        _x, _y = self.x[self.i:self.i + self.bs], self.y[self.i:self.i + self.bs]
+        self.i += self.bs
+        _y_neg = self._get_neg_(_y)
+
+        return _x, _y, _y_neg
+
+
 class SortishSampler:
     """
         Sample the data so like-sized text appears together.
@@ -146,4 +220,4 @@ if __name__ == "__main__":
     X = np.random.randint(0, 100, (200, 4))
     Y = np.random.randint(0, 100, (200, 1))
     bsz = 19
-    diter = SimplestSampler(X, Y, bsz)
+    diter = SimplestSampler({'x': X, 'y': Y}, bsz)
