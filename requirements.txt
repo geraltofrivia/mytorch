@@ -1,4 +1,3 @@
-spacy
 requests
 torch
 tqdm
