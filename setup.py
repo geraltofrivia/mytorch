@@ -12,12 +12,12 @@ setup(
     long_description=package_description,
     long_description_content_type="text/markdown",
     url="https://github.com/geraltofrivia/mytorch/",
-    packages=find_packages('.'),
-    package_dir={'': '.'},
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
     project_urls={
         "Source Code": "https://github.com/geraltofrivia/mytorch"
     },
-    install_requires=['spacy', 'tqdm', 'numpy'],
+    install_requires=['tqdm', 'numpy'],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Programming Language :: Python :: 3",
