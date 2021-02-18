@@ -211,7 +211,7 @@ def mt_save_dir(parentdir: Path, _newdir: bool = False):
     return parentdir
 
 def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch_stuff: list = None, pickle_stuff: list = None,
-            numpy_stuff: list = None, json_stuff: list = None):
+            numpy_stuff: list = None, json_stuff: List[tosave] = None):
     """
 
         Saves bunch of diff stuff in a particular dict.
@@ -264,9 +264,10 @@ def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch
         except:
             traceback.print_exc()
 
-    for data in _filter_serializables_(json_stuff) or ():
+    for data in json_stuff or ():
+        data_ = _filter_serializables_(data.obj)
         try:
-            json.dump(data.obj, open(savedir / data.fname, 'w+'))
+            json.dump(data_obj, open(savedir / data.fname, 'w+'))
         except:
             traceback.print_exc()
 
