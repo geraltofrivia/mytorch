@@ -148,6 +148,21 @@ class Counter(dict):
 
 tosave = namedtuple('ObjectsToSave', 'fname obj')
 
+def _is_serializable_(obj) -> bool:
+    """ Check if the obj can be JSON serialized """
+    try:
+        json.dumps(obj)
+        return True
+    except TypeError:
+        return False
+
+def _filter_serializables_(data: dict) -> dict:
+    seralizables = {}
+    for key, val in data.items():
+        if _is_serializable_(key):
+            seralizables[key] = value
+    return seralizables
+
 def mt_save_dir(parentdir: Path, _newdir: bool = False):
     """
             Function which returns the last filled/or newest unfilled folder in a particular dict.
@@ -249,7 +264,7 @@ def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch
         except:
             traceback.print_exc()
 
-    for data in json_stuff or ():
+    for data in _filter_serializables_(json_stuff) or ():
         try:
             json.dump(data.obj, open(savedir / data.fname, 'w+'))
         except:
