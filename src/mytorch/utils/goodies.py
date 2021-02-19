@@ -157,10 +157,11 @@ def _is_serializable_(obj) -> bool:
         return False
 
 def _filter_serializables_(data: dict) -> dict:
+    """ Return another dict, keeping only those items which can be JSON dumped to disk. """
     seralizables = {}
     for key, val in data.items():
         if _is_serializable_(key):
-            seralizables[key] = value
+            seralizables[key] = val
     return seralizables
 
 def mt_save_dir(parentdir: Path, _newdir: bool = False):
