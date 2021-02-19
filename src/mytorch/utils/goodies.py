@@ -266,7 +266,7 @@ def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch
             traceback.print_exc()
 
     for data in json_stuff or ():
-        data_ = _filter_serializables_(data.obj)
+        data_obj = _filter_serializables_(data.obj)
         try:
             json.dump(data_obj, open(savedir / data.fname, 'w+'))
         except:
