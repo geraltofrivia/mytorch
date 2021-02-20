@@ -148,6 +148,7 @@ class Counter(dict):
 
 tosave = namedtuple('ObjectsToSave', 'fname obj')
 
+
 def _is_serializable_(obj) -> bool:
     """ Check if the obj can be JSON serialized """
     try:
@@ -156,13 +157,17 @@ def _is_serializable_(obj) -> bool:
     except TypeError:
         return False
 
+
 def _filter_serializables_(data: dict) -> dict:
     """ Return another dict, keeping only those items which can be JSON dumped to disk. """
-    seralizables = {}
+    serializables = {}
     for key, val in data.items():
-        if _is_serializable_(key):
-            seralizables[key] = val
-    return seralizables
+        if _is_serializable_(val):
+            serializables[key] = val
+        else:
+            continue
+    return serializables
+
 
 def mt_save_dir(parentdir: Path, _newdir: bool = False):
     """
@@ -211,8 +216,9 @@ def mt_save_dir(parentdir: Path, _newdir: bool = False):
 
     return parentdir
 
-def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch_stuff: list = None, pickle_stuff: list = None,
-            numpy_stuff: list = None, json_stuff: List[tosave] = None):
+
+def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch_stuff: list = None,
+            pickle_stuff: list = None, numpy_stuff: list = None, json_stuff: List[tosave] = None):
     """
 
         Saves bunch of diff stuff in a particular dict.
@@ -232,7 +238,8 @@ def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch
 
 
     :param savedir: pathlib.Path object of the parent directory
-    :param message: a message to be saved in the folder alongwith (as text)
+    :param message: a message to be saved in the folder along with (as text)
+    :param message_fname: the filename to which we shall save the message
     :param torch_stuff: list of tosave tuples to be saved with torch.save functions
     :param pickle_stuff: list of tosave tuples to be saved with pickle.dump
     :param numpy_stuff: list of tosave tuples to be saved with numpy.save
@@ -273,7 +280,7 @@ def mt_save(savedir: Path, message: str = None, message_fname: str = None, torch
             traceback.print_exc()
 
 
-def str2bool(v)->bool:
+def str2bool(v) -> bool:
     """
         Function (copied from -https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse )
 
