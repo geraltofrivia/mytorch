@@ -23,7 +23,7 @@ def simplest_loop(epochs: int,
                   loss_fn: torch.nn,
                   train_fn: Callable,
                   predict_fn: Callable,
-                  device: torch.device = torch.device('cpu'),
+                  device: Union[str, torch.device] = torch.device('cpu'),
                   data_fn: classmethod = dataiters.SimplestSampler,
                   eval_fn: Callable = default_eval) -> (list, list, list):
     """
@@ -109,8 +109,8 @@ def simplest_loop(epochs: int,
 
 
 def generic_loop(epochs: int,
-                 data: int,
-                 device: torch.device,
+                 data: dict,
+                 device: Union[str, torch.device],
                  opt: torch.optim,
                  loss_fn: torch.nn,
                  model: torch.nn.Module,
@@ -143,6 +143,8 @@ def generic_loop(epochs: int,
         # Data input
             Data should be a dict like so:
                 {"train":{"x":np.arr, "y":np.arr}, "val":{"x":np.arr, "y":np.arr} }
+            or more generally,
+                {"train": something that can be thrown to data_fn, "valid": something that can be thrown to data_fn}
 
         # Saving Logic
             If the flag is enabled, give in the dir and it'll save traces and the model (and the model encoder)
@@ -253,7 +255,7 @@ def generic_loop(epochs: int,
 
                 per_epoch_vl_acc.append(eval_fn(y_pred, _y).item())
 
-        # Bookkeep
+        # Bookkeeping
         train_acc.append(np.mean(per_epoch_tr_acc))
         train_loss.append(np.mean(per_epoch_loss))
         val_acc.append(np.mean(per_epoch_vl_acc))
