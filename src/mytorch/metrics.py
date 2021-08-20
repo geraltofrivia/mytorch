@@ -1,11 +1,10 @@
 """
     One stop shop for most of your metrics needs
 """
-import torch
-import numpy as np
-import torchmetrics as tm
-
 from typing import List, Callable
+
+import torch
+import torchmetrics as tm
 
 from .utils.goodies import UnknownMetricName
 
@@ -16,16 +15,16 @@ class MultiClassSingleLabelMetrics(object):
     """
 
     @staticmethod
-    def mean_rank(preds: torch.Tensor, target: torch.Tensor) -> float:
+    def mean_rank(preds: torch.Tensor, target: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         """Average rank. Preds: (n_instances, m_classes), target: (n_instance, 1) """
-        return torch.mean(torch.nonzero((torch.argsort(-preds, dim=1) == target).to(torch.int))[:,1]+1.0).item()
+        return torch.mean(torch.nonzero((torch.argsort(-preds, dim=1) == target).to(torch.int))[:,1]+1.0)
 
     @staticmethod
-    def hits_at(preds: torch.Tensor, target: torch.Tensor, k: int) -> float:
+    def hits_at(preds: torch.Tensor, target: torch.Tensor, k: int, *args, **kwargs) -> torch.Tensor:
         """ Hits at K, Preds: (n_instances, m_classes), target: (n_instance, 1) """
 
         assert preds.shape[1] >= k, f"K is too high for a tensor of shape {preds.shape}"
-        return (torch.argsort(-preds, dim=1)[:,:5] == target).any(dim=1).to(torch.float).mean().item()
+        return (torch.argsort(-preds, dim=1)[:,:5] == target).any(dim=1).to(torch.float).mean()
 
 
 class MetricsWrapper:
@@ -35,10 +34,16 @@ class MetricsWrapper:
         self.metric_fns = metric_fns
 
     def __call__(self, preds: torch.Tensor, target: torch.Tensor, average: str = 'micro'):
+        if len(target.shape) == 1:
+            target = target.unsqueeze(1)
+
         return {
             nm: fn(preds=preds, target=target, average=average).item()
             for nm, fn in zip(self.metric_nms, self.metric_fns)
         }
+
+    def __repr__(self):
+        return f"{type(self)} object containing the following metrics - {self.metric_nms}"
 
     @classmethod
     def from_args(cls, args: List[str]):
