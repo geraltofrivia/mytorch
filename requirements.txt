@@ -4,3 +4,4 @@ torch
 tqdm
 numpy
 fastprogress
+torchmetrics>=0.5

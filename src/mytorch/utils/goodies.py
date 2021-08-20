@@ -22,7 +22,7 @@ class NotifyAPIKeyNotFoundError(Exception): pass
 class NotifyMessageMismatchError(Exception): pass
 class ImproperCMDArguments(Exception): pass
 class UnknownSpacyLang(ValueError): pass
-class InconsistentType(TypeError): pass
+class UnknownMetricName(ValueError): pass
 
 
 class BadParameters(Exception):

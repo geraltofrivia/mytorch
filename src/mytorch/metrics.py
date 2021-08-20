@@ -3,91 +3,78 @@
 """
 import torch
 import numpy as np
+import torchmetrics as tm
 
-from utils.goodies import InconsistentType
+from typing import List, Callable
 
-class MultiClassUniLabelMetrics(object):
+from .utils.goodies import UnknownMetricName
+
+
+class MultiClassSingleLabelMetrics(object):
     """
         Collection of commonly used metrics for multi class, uni label problems (most problems including MLM, LinkPred)
     """
 
     @staticmethod
-    def acc(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Accuracy. true: (n,1); pred: (n, m); return float"""
-        if type(true) is torch.Tensor and type(pred) is torch.Tensor:
-            return MultiClassUniLabelMetrics._torch_acc_(true=true, pred=pred)
-        elif type(true) is np.ndarray and type(pred) is np.ndarray:
-            return MultiClassUniLabelMetrics._numpy_acc_(true=true, pred=pred)
-        else:
-            raise InconsistentType("True and Pred belong to unknown/different types)")
+    def mean_rank(preds: torch.Tensor, target: torch.Tensor) -> float:
+        """Average rank. Preds: (n_instances, m_classes), target: (n_instance, 1) """
+        return torch.mean(torch.nonzero((torch.argsort(-preds, dim=1) == target).to(torch.int))[:,1]+1.0).item()
 
     @staticmethod
-    def _torch_acc_(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Accuracy. true: (n,1); pred: (n, m); return float"""
-        return torch.mean((torch.argmax(pred, dim=1) == true).to(torch.float)).item()
+    def hits_at(preds: torch.Tensor, target: torch.Tensor, k: int) -> float:
+        """ Hits at K, Preds: (n_instances, m_classes), target: (n_instance, 1) """
 
-    @staticmethod
-    def _numpy_acc_(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Accuracy. true: (n,1); pred: (n, m); return float"""
-        ...
+        assert preds.shape[1] >= k, f"K is too high for a tensor of shape {preds.shape}"
+        return (torch.argsort(-preds, dim=1)[:,:5] == target).any(dim=1).to(torch.float).mean().item()
 
-    @staticmethod
-    def mr(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Mean Rank. true: (n,1); pred: (n, m); return float"""
-        if type(true) is torch.Tensor and type(pred) is torch.Tensor:
-            return MultiClassUniLabelMetrics._torch_mr_(true=true, pred=pred)
-        elif type(true) is np.ndarray and type(pred) is np.ndarray:
-            return MultiClassUniLabelMetrics._numpy_mr_(true=true, pred=pred)
-        else:
-            raise InconsistentType("True and Pred belong to unknown/different types)")
 
-    @staticmethod
-    def _torch_mr_(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Mean Rank. true: (n,1); pred: (n, m); return float """
-        ...
+class MetricsWrapper:
 
-    @staticmethod
-    def _numpy_mr_(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Mean Rank. true: (n,1); pred: (n, m); return float """
-        ...
+    def __init__(self, metric_nms: List[str], metric_fns: List[Callable]):
+        self.metric_nms = metric_nms
+        self.metric_fns = metric_fns
 
-    @staticmethod
-    def mrr(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Mean Reciprocal Rank. true: (n,1); pred: (n, m); return float"""
-        if type(true) is torch.Tensor and type(pred) is torch.Tensor:
-            return MultiClassUniLabelMetrics._torch_mrr_(true=true, pred=pred)
-        elif type(true) is np.ndarray and type(pred) is np.ndarray:
-            return MultiClassUniLabelMetrics._numpy_mrr_(true=true, pred=pred)
-        else:
-            raise InconsistentType("True and Pred belong to unknown/different types)")
+    def __call__(self, preds: torch.Tensor, target: torch.Tensor, average: str = 'micro'):
+        return {
+            nm: fn(preds=preds, target=target, average=average).item()
+            for nm, fn in zip(self.metric_nms, self.metric_fns)
+        }
 
-    @staticmethod
-    def _numpy_mrr_(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Mean Reciprocal Rank. true: (n,1); pred: (n, m); return float """
-        ...
+    @classmethod
+    def from_args(cls, args: List[str]):
+        torchmetrics_metrics = {
+            'acc': 'accuracy',
+            'accuracy': 'accuracy',
+            'reciprocal_rank': 'retrieval_reciprocal_rank',
+            'mrr': 'retrieval_reciprocal_rank',
+            'mean_reciprocal_rank': 'retrieval_reciprocal_rank',
+            'retrieval_reciprocal_rank': 'retrieval_reciprocal_rank'
+        }
 
-    @staticmethod
-    def _torch_mrr_(true: torch.Tensor, pred: torch.Tensor) -> float:
-        """ Mean Reciprocal Rank. true: (n,1); pred: (n, m); return float """
-        ...
+        local_metrics = {
+            'hitsat':'hits_at',
+            'hits@': 'hits_at',
+            'hits_at': 'hits_at',
+            'mr': 'mean_rank',
+            'meanrank': 'mean_rank',
+            'mean_rank': 'mean_rank'
+        }
 
-    @staticmethod
-    def hits_at(true: torch.Tensor, pred: torch.Tensor, k: int) -> float:
-        """ Mean Rank. true: (n,1); pred: (n, m); return float"""
-        if type(true) is torch.Tensor and type(pred) is torch.Tensor:
-            return MultiClassUniLabelMetrics._torch_hits_at_(true=true, pred=pred, k=k)
-        elif type(true) is np.ndarray and type(pred) is np.ndarray:
-            return MultiClassUniLabelMetrics._numpy_hits_at_(true=true, pred=pred, k=k)
-        else:
-            raise InconsistentType("True and Pred belong to unknown/different types)")
+        callables: List[Callable] = []
 
-    @staticmethod
-    def _torch_hits_at_(true: torch.Tensor, pred: torch.Tensor, k: int) -> float:
-        """ Hits at K, true: (n,1); pred: (n, m); return float """
-        ...
+        for arg in args:
 
-    @staticmethod
-    def _numpy_hits_at_(true: torch.Tensor, pred: torch.Tensor, k: int) -> float:
-        """ Hits at K, true: (n,1); pred: (n, m); return float """
-        ...
-    
+            # Find if the arg is known in torchmetrics (based on dict above)
+            if arg in torchmetrics_metrics:
+                callables.append(getattr(tm.functional, torchmetrics_metrics[arg]))
+
+            # Find if the arg is known in local metrics implemented in this file
+            elif arg in local_metrics:
+                callables.append(getattr(MultiClassSingleLabelMetrics, local_metrics[arg]))
+
+            # Raise MetricNotUnderstoodError
+            else:
+                raise UnknownMetricName(f"Metric invoked by the name {arg} is not understood.")
+            ...
+
+        return cls(args, callables)
