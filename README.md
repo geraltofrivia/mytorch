@@ -100,6 +100,9 @@ But If you'd like this completely unnecessary gimmick, follow along:
 5. Done :balloon: You'll be notified when your model's done training.
 
 # Changelog
+#### v0.0.6
+1. Interfaced some metrics from [torchmetrics](https://pypi.org/project/torchmetrics/), and implemented some more into a neat little package pending 
+
 #### v0.0.2
 1. Added negative sampling
 1. [TODO] Added multiple evaluation functions

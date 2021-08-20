@@ -1,6 +1,8 @@
 """
     One stop shop for most of your metrics needs
 """
+import re
+from functools import partial
 from typing import List, Callable
 
 import torch
@@ -23,11 +25,19 @@ class MultiClassSingleLabelMetrics(object):
     def hits_at(preds: torch.Tensor, target: torch.Tensor, k: int, *args, **kwargs) -> torch.Tensor:
         """ Hits at K, Preds: (n_instances, m_classes), target: (n_instance, 1) """
 
-        assert preds.shape[1] >= k, f"K is too high for a tensor of shape {preds.shape}"
-        return (torch.argsort(-preds, dim=1)[:,:5] == target).any(dim=1).to(torch.float).mean()
+        # assert preds.shape[1] >= k, f"K is too high for a tensor of shape {preds.shape}"
+        return (torch.argsort(-preds, dim=1)[:, :k] == target).any(dim=1).to(torch.float).mean()
 
 
 class MetricsWrapper:
+    """
+        Usage:
+
+            > mc = MetricsWrapper.from_args(('acc', 'mr'))
+            > mc(target=target, preds=preds)
+            {'acc': 0.25, 'mr': 307.5}
+
+    """
 
     def __init__(self, metric_nms: List[str], metric_fns: List[Callable]):
         self.metric_nms = metric_nms
@@ -58,8 +68,10 @@ class MetricsWrapper:
 
         local_metrics = {
             'hitsat':'hits_at',
+            'hitsat_':'hits_at',
             'hits@': 'hits_at',
             'hits_at': 'hits_at',
+            'hits_at_': 'hits_at',
             'mr': 'mean_rank',
             'meanrank': 'mean_rank',
             'mean_rank': 'mean_rank'
@@ -69,13 +81,20 @@ class MetricsWrapper:
 
         for arg in args:
 
+            if arg.startswith('hit') and re.search(r'\d+$', arg) is not None:
+                suffix = re.search(r'\d+$', arg).group()
+                arg = arg.replace(suffix, '')
+                k = int(suffix)
+            else:
+                k = None
+
             # Find if the arg is known in torchmetrics (based on dict above)
             if arg in torchmetrics_metrics:
                 callables.append(getattr(tm.functional, torchmetrics_metrics[arg]))
 
             # Find if the arg is known in local metrics implemented in this file
             elif arg in local_metrics:
-                callables.append(getattr(MultiClassSingleLabelMetrics, local_metrics[arg]))
+                callables.append(partial(getattr(MultiClassSingleLabelMetrics, local_metrics[arg]), k=k))
 
             # Raise MetricNotUnderstoodError
             else:
