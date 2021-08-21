@@ -43,12 +43,12 @@ class MetricsWrapper:
         self.metric_nms = metric_nms
         self.metric_fns = metric_fns
 
-    def __call__(self, preds: torch.Tensor, target: torch.Tensor, average: str = 'micro'):
+    def __call__(self, preds: torch.Tensor, target: torch.Tensor):
         if len(target.shape) == 1:
             target = target.unsqueeze(1)
 
         return {
-            nm: fn(preds=preds, target=target, average=average).item()
+            nm: fn(preds=preds, target=target).item()
             for nm, fn in zip(self.metric_nms, self.metric_fns)
         }
 
@@ -69,6 +69,7 @@ class MetricsWrapper:
         local_metrics = {
             'hitsat':'hits_at',
             'hitsat_':'hits_at',
+            'h': 'hits_at',
             'hits@': 'hits_at',
             'hits_at': 'hits_at',
             'hits_at_': 'hits_at',
@@ -81,7 +82,7 @@ class MetricsWrapper:
 
         for arg in args:
 
-            if arg.startswith('hit') and re.search(r'\d+$', arg) is not None:
+            if arg.startswith('h') and re.search(r'\d+$', arg) is not None:
                 suffix = re.search(r'\d+$', arg).group()
                 arg = arg.replace(suffix, '')
                 k = int(suffix)
