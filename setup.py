@@ -5,7 +5,7 @@ with open("README.md", "r") as readmefile:
 
 setup(
     name="my-torch",
-    version="0.0.6",
+    version="0.0.7",
     author="Priyansh Trivedi",
     author_email="mail@priyansh.page",
     description="A transparent boilerplate + bag of tricks to ease my (yours?) (our?) PyTorch dev time.",

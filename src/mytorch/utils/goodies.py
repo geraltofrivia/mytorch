@@ -1,17 +1,18 @@
-import os
-import time
-import json
-import torch
-import pickle
-import requests
 import argparse
-import warnings
+import json
+import os
+import pickle
+import time
 import traceback
-import numpy as np
-from pathlib import Path
+import warnings
 from collections import namedtuple
+from pathlib import Path
+from typing import List, Dict, Union, Any
+
+import numpy as np
+import requests
+import torch
 from torch.autograd import Function
-from typing import List, Dict, Union, Any, Optional
 
 TRACES_FORMAT = {name: i for i, name in enumerate(['train_acc', 'train_loss', 'val_acc'])}
 
@@ -32,9 +33,15 @@ class BadParameters(Exception):
 
 
 class FancyDict(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(**kwargs)
-        self.__dict__ = self
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(**kwargs)
+    #     self.__dict__ = self
+
+    def __getattr__(self, item):
+        return self[item]
+
+    def __setattr__(self, key, value):
+        self[key] = value
 
 
 class GradReverse(Function):
