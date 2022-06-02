@@ -39,6 +39,9 @@ class FancyDict(dict):
 
     def __getattr__(self, item):
         return self[item]
+    
+    def __getattribute__(self, item):
+        return object.__getattribute__(self, item)
 
     def __setattr__(self, key, value):
         self[key] = value
