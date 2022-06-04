@@ -33,15 +33,21 @@ class BadParameters(Exception):
 
 
 class FancyDict(dict):
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(**kwargs)
-    #     self.__dict__ = self
+    """
+        Messing with getters and setters can be difficult. we put a blanket ban on every built in.
+        If you're
+    """
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str):
+        if item.startswith('__') and item.endswith('__'):
+            super().__getattr__(item)
         return self[item]
-    
-    def __getattribute__(self, item):
-        return object.__getattribute__(self, item)
+
+    # def __getattribute__(self, item):
+    #     if item in self:
+    #         self[item]
+    #     else:
+    #         object.__getattribute__(self, item)
 
     def __setattr__(self, key, value):
         self[key] = value
