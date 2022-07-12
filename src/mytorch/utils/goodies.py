@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List, Dict, Union, Any
 
 import numpy as np
+import psutil
 import requests
 import torch
 from torch.autograd import Function
@@ -455,3 +456,17 @@ def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: 
 
     # Finally check if something unwanted persists here
     return parsed
+
+
+def estimate_memory(device: Union[str, torch.device]):
+    if type(device) == torch.device:
+        device = device.type
+
+    # Now we're working with strings
+    togbs = lambda x: x / (1024**3)
+
+    if device == 'cpu':
+        return togbs(psutil.virtual_memory().available)
+
+    if device == 'cuda' or 'cuda' in device:
+        return togbs(torch.cuda.mem_get_info()[0])
