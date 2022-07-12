@@ -458,7 +458,8 @@ def parse_args(raw_args: List[str], compulsory: List[str] = (), compulsory_msg: 
     return parsed
 
 
-def estimate_memory(device: Union[str, torch.device]):
+def estimate_memory(device: Union[str, torch.device] = 'cuda' if torch.cuda.is_available() else 'cpu'):
+    """ defaults to CPU memory """
     if type(device) == torch.device:
         device = device.type
 
