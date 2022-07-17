@@ -7,8 +7,9 @@ import traceback
 import warnings
 from collections import namedtuple
 from pathlib import Path
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Any, Union
 
+import git
 import numpy as np
 import psutil
 import requests
@@ -31,6 +32,16 @@ class BadParameters(Exception):
     def __init___(self, dErrorArguments):
         Exception.__init__(self, "Unexpected value of parameter {0}".format(dErrorArguments))
         self.dErrorArguments = dErrorArguments
+
+
+def get_commit_hash() -> Optional[str]:
+    try:
+        repo = git.Repo(search_parent_directories=True)
+        sha = repo.head.object.hexsha
+        return sha
+    except git.InvalidGitRepositoryError:
+        warnings.warn("Not a valid Git Repository")
+        return None
 
 
 class FancyDict(dict):
