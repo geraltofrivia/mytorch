@@ -7,7 +7,7 @@ import traceback
 import warnings
 from collections import namedtuple
 from pathlib import Path
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 
 import git
 import numpy as np
