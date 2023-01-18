@@ -9,12 +9,13 @@
 
 """
 
-from tqdm import tqdm
 from typing import Callable
 
+from tqdm import tqdm
+
+from . import dataiters
 # Local imports
 from .utils.goodies import *
-from . import dataiters
 
 
 def simplest_loop(epochs: int,
@@ -34,6 +35,7 @@ def simplest_loop(epochs: int,
 
         Data should be a dict like so:
             {"train":{"x":np.arr, "y":np.arr}, "val":{"x":np.arr, "y":np.arr} }
+        NOTE: the np.arr datatype is automatically transformed to torch dtypes. So be aware of what you're passing.
 
         Train_fn must return both loss and y_pred
 
@@ -69,8 +71,8 @@ def simplest_loop(epochs: int,
             for x, y in tqdm(trn_dl):
                 opt.zero_grad()
 
-                _x = torch.tensor(x, dtype=torch.long, device=device)
-                _y = torch.tensor(y, dtype=torch.long, device=device)
+                _x = torch.tensor(x, device=device)
+                _y = torch.tensor(y, device=device)
 
                 y_pred = train_fn(_x)
                 loss = loss_fn(y_pred, _y)
@@ -86,8 +88,8 @@ def simplest_loop(epochs: int,
 
             per_epoch_vl_acc = []
             for x, y in tqdm(val_dl):
-                _x = torch.tensor(x, dtype=torch.long, device=device)
-                _y = torch.tensor(y, dtype=torch.long, device=device)
+                _x = torch.tensor(x, device=device)
+                _y = torch.tensor(y, device=device)
 
                 y_pred = predict_fn(_x)
 
@@ -145,6 +147,7 @@ def generic_loop(epochs: int,
                 {"train":{"x":np.arr, "y":np.arr}, "val":{"x":np.arr, "y":np.arr} }
             or more generally,
                 {"train": something that can be thrown to data_fn, "valid": something that can be thrown to data_fn}
+            NOTE: the np.arr datatype is automatically transformed to torch dtypes. So be aware of what you're passing.
 
         # Saving Logic
             If the flag is enabled, give in the dir and it'll save traces and the model (and the model encoder)
@@ -219,8 +222,8 @@ def generic_loop(epochs: int,
 
                 if lr_schedule: lrs.append(update_lr(opt, lr_schedule.get()))
 
-                _x = torch.tensor(x, dtype=torch.long, device=device)
-                _y = torch.tensor(y, dtype=torch.long, device=device)
+                _x = torch.tensor(x, device=device)
+                _y = torch.tensor(y, device=device)
 
                 y_pred = train_fn(_x)
                 loss = loss_fn(y_pred, _y)
@@ -248,8 +251,8 @@ def generic_loop(epochs: int,
 
             per_epoch_vl_acc = []
             for x, y in tqdm(val_dl):
-                _x = torch.tensor(x, dtype=torch.long, device=device)
-                _y = torch.tensor(y, dtype=torch.long, device=device)
+                _x = torch.tensor(x, device=device)
+                _y = torch.tensor(y, device=device)
 
                 y_pred = predict_fn(_x)
 
